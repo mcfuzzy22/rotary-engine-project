@@ -14,7 +14,7 @@
 <ErrorBoundary>
     <ChildContent>
 <h3>Part Details (Ultra-Minimal Test)</h3>
-    <button class="btn btn-danger" @onclick="HandleClick">TEST CLICK EVENT</button> @* Added for testing *@
+    
 @if (isLoading)
 {
     <p>STATE: isLoading is true. PartId: @PartId</p>
@@ -187,6 +187,10 @@ protected override void OnAfterRender(bool firstRender)
                     await SafeLoadModel(part.ModelPath);
                 }
                 // ... (rest of the try-catch) ...
+            StateHasChanged();
+            Console.WriteLine($"PartDetailPage ({PartId}): StateHasChanged() called after initial model load attempt in firstRender.");
+            Logger.LogInformation("PartDetailPage ({PartId}): StateHasChanged() called after initial model load attempt in firstRender.", PartId);
+
             }
             catch (Exception ex_afterrender_init)
             {
