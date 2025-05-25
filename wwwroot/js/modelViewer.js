@@ -3,7 +3,15 @@
 var engine = null;
 var scene = null;
 var arcRotateCamera = null; // Keep a reference to the camera
+// At the top of modelViewer.js, or inside window.blazorModelViewer
+window.myJsFunctions = {
+    pingBlazor: function () {
+        console.log("JavaScript: pingBlazor function was called by Blazor!");
+        return "JavaScript says: Pong!";
+    }
+};
 
+// Keep your existing window.blazorModelViewer = { ... }
 window.blazorModelViewer = {
     init: function (canvasId) {
         const canvas = document.getElementById(canvasId);

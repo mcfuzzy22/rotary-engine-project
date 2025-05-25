@@ -143,6 +143,7 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproje
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.AssemblyInfo.cs
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.csproj.CoreCompileInputs.cache
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.sourcelink.json
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\Components\Layout\NavMenu.razor.rz.scp.css
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\bundle\rotaryproject.styles.css
@@ -204,4 +205,4 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\refint\rota
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.pdb
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.genruntimeconfig.cache
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\ref\rotaryproject.dll
-C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\x004i6yipr-nrqsz90ncx.gz
+c:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\x004i6yipr-51enk7pbjy.gz
