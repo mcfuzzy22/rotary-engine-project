@@ -1,0 +1,206 @@
+@page "/partdetail/{PartID:int}" // Route parameter to accept PartID
+@implements IAsyncDisposable      // For cleaning up JS interop
+
+@using rotaryproject.Data         // Adjust if your project namespace is different
+@using rotaryproject.Data.Models  // Adjust if your project namespace is different
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations // Only if you plan to use validation attributes directly on this page's model, less common here
+
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<h3>Part Details</h3>
+
+@if (isLoading)
+{
+    <p><em>Loading part details...</em></p>
+}
+else if (notFound)
+{
+    <p><em>Sorry, part not found.</em> <a href="/partslist">Back to list.</a></p>
+}
+else if (part != null)
+{
+    <div>
+        <h4>@part.Name</h4>
+        <dl class="row">
+            <dt class="col-sm-3">Category</dt>
+            <dd class="col-sm-9">@(part.Category?.Name ?? "N/A")</dd>
+
+            <dt class="col-sm-3">SKU</dt>
+            <dd class="col-sm-9">@(part.Sku ?? "N/A")</dd> @* Corrected to Sku (initial cap) *@
+
+            <dt class="col-sm-3">Description</dt>
+            <dd class="col-sm-9">@(part.Description ?? "N/A")</dd>
+
+            <dt class="col-sm-3">Model Path</dt>
+            <dd class="col-sm-9">@part.ModelPath</dd>
+
+            <dt class="col-sm-3">Image Path</dt>
+            <dd class="col-sm-9">@(part.ImagePath ?? "N/A")</dd>
+
+            <dt class="col-sm-3">Base Price</dt>
+            <dd class="col-sm-9">@(part.BasePrice?.ToString("C") ?? "N/A")</dd>
+
+            @* Later, you'll display PartStats here *@
+            @* For example:
+            @if (part.PartStats != null && part.PartStats.Any())
+            {
+                <dt class="col-sm-3">Stats</dt>
+                <dd class="col-sm-9">
+                    <ul>
+                        @foreach(var stat in part.PartStats)
+                        {
+                            <li>@stat.StatName: @stat.StatValue @stat.Unit</li>
+                        }
+                    </ul>
+                </dd>
+            }
+            *@
+        </dl>
+
+        @* Container for the 3D model viewer *@
+        <canvas id="@viewerCanvasId" style="width: 100%; height: 400px; touch-action: none; border: 1px solid #ccc; background-color: #f0f0f0;"></canvas>
+        <p id="modelError" style="color: red;"></p> @* To display model loading errors *@
+    </div>
+}
+else // Should ideally be covered by isLoading or notFound
+{
+    <p><em>Error loading part details or part not specified.</em></p>
+}
+
+@code {
+    [Parameter]
+    public int PartId { get; set; } // This property will be populated from the route parameter
+
+    private Part? part;
+    private bool isLoading = true;
+    private bool notFound = false;
+    private string viewerCanvasId = "babylon-3d-canvas"; // Unique ID for the canvas
+
+    // Inside PartDetailPage.razor @code block
+    private string viewerContainerId = "babylon-viewer-canvas"; // Or whatever you named it
+    private bool _isEngineInitialized = false; // Flag to track if Babylon engine is up for the current canvas
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+        string? previousModelPath = part?.ModelPath;
+        part = null; // Reset part before loading
+
+        Console.WriteLine($"PartDetailPage: Loading PartId {PartId}");
+
+        try
+        {
+            if (DbContext.Parts != null && PartId > 0)
+            {
+                part = await DbContext.Parts
+                                    .Include(p => p.Category)
+                                    // .Include(p => p.PartStats) // Uncomment when PartStats is ready
+                                    .FirstOrDefaultAsync(p => p.PartId == PartId); // Corrected to PartId (lowercase 'd')
+
+                if (part == null)
+                {
+                    Console.WriteLine($"PartDetailPage: PartId {PartId} not found.");
+                    notFound = true;
+                }
+                else
+                {
+                    Console.WriteLine($"PartDetailPage: Part '{part.Name}' loaded. ModelPath: '{part.ModelPath}'");
+                    // If component is already rendered & engine initialized, and model path changes, reload model.
+                    if (_isEngineInitialized && part.ModelPath != previousModelPath && !string.IsNullOrEmpty(part.ModelPath))
+                    {
+                        Console.WriteLine($"PartDetailPage: ModelPath changed, attempting to reload model: {part.ModelPath}");
+                        await JSRuntime.InvokeVoidAsync("blazorModelViewer.loadModel", part.ModelPath);
+                    }
+                }
+            }
+            else if (PartId <= 0)
+            {
+                Console.WriteLine($"PartDetailPage: Invalid PartId {PartId} from route.");
+                notFound = true;
+            }
+            else
+            {
+                Console.WriteLine("PartDetailPage: Error: Parts DbSet is null.");
+                // This case should ideally not happen if DbContext is injected correctly.
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PartDetailPage: Error fetching part details for PartId {PartId}: {ex.Message}");
+            // You might want to display this error to the user as well
+            notFound = true; // Or set a specific error message property
+        }
+        finally
+        {
+            isLoading = false;
+        }
+        // No StateHasChanged() here; Blazor handles it after OnParametersSetAsync typically.
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) // Initialize engine only on the very first render of this component instance
+        {
+            Console.WriteLine($"PartDetailPage: First render. Initializing 3D viewer for canvas '{viewerCanvasId}'.");
+            try
+            {
+                _isEngineInitialized = await JSRuntime.InvokeAsync<bool>("blazorModelViewer.init", viewerCanvasId);
+                Console.WriteLine($"PartDetailPage: 3D viewer initialization returned: {_isEngineInitialized}");
+
+                if (_isEngineInitialized && part != null && !string.IsNullOrEmpty(part.ModelPath))
+                {
+                    Console.WriteLine($"PartDetailPage: Initial model load for: {part.ModelPath}");
+                    await JSRuntime.InvokeVoidAsync("blazorModelViewer.loadModel", part.ModelPath);
+                }
+                else if (_isEngineInitialized && (part == null || string.IsNullOrEmpty(part.ModelPath)))
+                {
+                     Console.WriteLine($"PartDetailPage: Engine initialized, but no part/modelPath to load yet.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"PartDetailPage: Error initializing 3D viewer or loading initial model: {ex.Message}");
+                // You could set an error message to display in the UI here, e.g., on the "modelError" <p> tag
+                try { await JSRuntime.InvokeVoidAsync("document.getElementById('modelError').innerText", $"Error initializing 3D viewer: {ex.Message}"); } catch {}
+
+            }
+        }
+        // This condition handles subsequent renders IF the part was loaded *after* the first render's init attempt,
+        // or if the part data becomes available and wasn't loaded initially.
+        else if (_isEngineInitialized && part != null && !string.IsNullOrEmpty(part.ModelPath) && !isLoading)
+        {
+            // This logic might be tricky. The goal is to load the model if it wasn't loaded on firstRender
+            // because 'part' data arrived later, or if we navigated to the same component instance with a new PartId
+            // The OnParametersSetAsync should handle re-loading if the ModelPath changes for an existing instance.
+            // For now, the primary load logic is in OnParametersSetAsync (if model path changes) and firstRender.
+            // A more robust way might involve checking if a model for the current part.ModelPath has already been loaded.
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Console.WriteLine($"PartDetailPage: Disposing component, PartId: {PartId}. Cleaning up 3D viewer.");
+        try
+        {
+            if (_isEngineInitialized) // Only try to dispose if it was initialized
+            {
+                await JSRuntime.InvokeVoidAsync("blazorModelViewer.dispose");
+                _isEngineInitialized = false; // Reset flag
+            }
+        }
+        catch (JSDisconnectedException)
+        {
+            // This can happen if the user navigates away quickly or the JS context is already gone.
+            // It's usually safe to ignore in this disposal context.
+            Console.WriteLine("PartDetailPage: JSDisconnectedException during dispose, JS context likely already gone.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PartDetailPage: Error during JS interop dispose: {ex.Message}");
+        }
+    }
+}
