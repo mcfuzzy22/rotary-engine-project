@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "VtoVxvLpfrE=",
+  "dgSpecHash": "diqHS9vofUs=",
   "success": true,
-  "projectFilePath": "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
+  "projectFilePath": "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\mcfuz\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\mcfuz\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

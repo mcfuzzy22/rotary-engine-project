@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("rotaryproject")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+82f61681e39392a5e29e84f39c8d89de1d14c93f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+39a2a2c9876c2b4452299d1a517879d97540c9a4")]
 [assembly: System.Reflection.AssemblyProductAttribute("rotaryproject")]
 [assembly: System.Reflection.AssemblyTitleAttribute("rotaryproject")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -147,7 +147,7 @@ else
             // This is a common scenario if the 'Name' column has a UNIQUE constraint in the database
             if (ex.InnerException != null && ex.InnerException.Message.Contains("UNIQUE constraint failed") || ex.InnerException.Message.Contains("Cannot insert duplicate key"))
             {
-                errorMessage = $"Error: A category with the name '{newCategory.Name}' already exists.";
+                errorMessage = $"Error: A category with the name '{newCategory.Name ?? "unknown"}' already exists.";
             }
             else
             {

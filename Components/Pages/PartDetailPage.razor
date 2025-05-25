@@ -1,6 +1,8 @@
 @page "/partdetail/{PartId:int}"
+@rendermode InteractiveServer
 @implements IAsyncDisposable
 
+@using Microsoft.Extensions.Logging
 @using rotaryproject.Data
 @using rotaryproject.Data.Models
 @using Microsoft.EntityFrameworkCore
@@ -8,9 +10,11 @@
 @inject RotaryEngineDbContext DbContext
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime
-
+@inject ILogger<PartDetailPage> Logger
+<ErrorBoundary>
+    <ChildContent>
 <h3>Part Details (Ultra-Minimal Test)</h3>
-
+    <button class="btn btn-danger" @onclick="HandleClick">TEST CLICK EVENT</button> @* Added for testing *@
 @if (isLoading)
 {
     <p>STATE: isLoading is true. PartId: @PartId</p>
@@ -26,7 +30,6 @@ else if (part != null)
         <h4>@part.Name</h4> @* This is safe if part is not null and Name is a string *@
         <p>Model Path: @(part.ModelPath ?? "N/A")</p>
         <p>Category: @(part.Category?.Name ?? "N/A")</p> @* Use null-conditional for navigation properties *@
-
         @* Canvas for the 3D viewer *@
         <canvas id="@viewerCanvasId" style="width: 100%; height: 400px; touch-action: none; border: 1px solid green; background-color: #f0f0f0;"></canvas>
         <p id="modelError" style="color: red; min-height: 20px;"></p>
@@ -37,7 +40,18 @@ else
 {
     <p>STATE: ERROR - part is NULL, not loading, and not 'notFound'. PartId: @PartId</p>
 }
-
+    </ChildContent>
+    <ErrorContent Context="ex"> @* This displays if an error is caught in ChildContent *@
+        <div class="blazor-error-boundary" style="background: #fff0f0; border: 1px solid red; padding: 1rem; color: black;">
+            <h3 style="color: red;">ERROR DISPLAYING PART DETAIL PAGE!</h3>
+            <p>An unhandled C# exception has occurred in this component's render logic or lifecycle.</p>
+            <p><strong>Error Message:</strong> <span style="color:red;">@ex.Message</span></p>
+            <hr />
+            <p><strong>Stack Trace (for debugging):</strong></p>
+            <pre style="white-space: pre-wrap; word-break: break-all; background: #f8f8f8; border: 1px solid #eee; padding: 0.5rem;">@ex.StackTrace</pre>
+        </div>
+    </ErrorContent>
+</ErrorBoundary>
 @code {
     [Parameter]
     public int PartId { get; set; }
@@ -48,8 +62,8 @@ else
    private string viewerCanvasId = $"babylon-canvas-{Guid.NewGuid()}";
     private bool _isEngineInitialized = false;
     private string? _currentLoadedModelPath;
-
-    protected override async Task OnInitializedAsync()
+    
+        protected override async Task OnInitializedAsync()
     {
         Console.WriteLine($"PartDetailPage ({PartId}): OnInitializedAsync - ENTERED.");
         try
@@ -138,41 +152,58 @@ else
     }
 
     // In @code block of PartDetailPage.razor
-protected override async Task OnAfterRenderAsync(bool firstRender)
-{
-    Console.WriteLine($"PartDetailPage ({PartId}): OnAfterRenderAsync - ENTERED. firstRender = {firstRender}, isLoading = {isLoading}, part is null = {(part == null)}, _isEngineInitialized = {_isEngineInitialized}");
-    if (firstRender)
+protected override void OnAfterRender(bool firstRender)
     {
-        try
-        {
-            Console.WriteLine($"PartDetailPage ({PartId}): (firstRender = true) - Testing basic JS interop PING.");
-            string pingResult = await JSRuntime.InvokeAsync<string>("myJsFunctions.pingBlazor");
-            Console.WriteLine($"PartDetailPage ({PartId}): PING from JS returned: '{pingResult}'"); // SERVER LOG
-
-            // Now try to initialize Babylon
-            Console.WriteLine($"PartDetailPage ({PartId}): About to call JSRuntime for 'blazorModelViewer.init'.");
-            _isEngineInitialized = await JSRuntime.InvokeAsync<bool>("blazorModelViewer.init", viewerCanvasId);
-            Console.WriteLine($"PartDetailPage ({PartId}): JS 'blazorModelViewer.init' returned: {_isEngineInitialized}");
-
-            if (_isEngineInitialized && part != null && !string.IsNullOrEmpty(part.ModelPath))
-            {
-                Console.WriteLine($"PartDetailPage ({PartId}): Initial model load for: {part.ModelPath}");
-                await SafeLoadModel(part.ModelPath);
-            }
-            else if (_isEngineInitialized)
-            {
-                 Console.WriteLine($"PartDetailPage ({PartId}): Engine initialized, but no part/modelPath to load on first render.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"PartDetailPage ({PartId}): EXCEPTION IN OnAfterRenderAsync (firstRender block): {ex.ToString()}");
-            await SetModelError($"JS Interop Error during 3D init/ping: {ex.Message}");
-        }
+        // This is the synchronous version. It's called just before OnAfterRenderAsync.
+        Logger.LogInformation("PartDetailPage ({PartId}): OnAfterRender (SYNC) called. firstRender = {FirstRender}", PartId, firstRender);
+        base.OnAfterRender(firstRender); // Call base method
     }
-    Console.WriteLine($"PartDetailPage ({PartId}): OnAfterRenderAsync - EXITED.");
-}
-    private async Task SafeLoadModel(string? modelPath)
+
+    // Keep your existing OnAfterRenderAsync with its detailed Console.WriteLine logging as well
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Using Console.WriteLine here for consistency with previous logs, 
+        // but you could switch these to Logger.LogInformation too.
+        Console.WriteLine($"PartDetailPage ({PartId}): OnAfterRenderAsync - ENTERED. firstRender = {firstRender}, isLoading = {isLoading}, part is null = {(part == null)}, _isEngineInitialized = {_isEngineInitialized}");
+        Logger.LogInformation("PartDetailPage ({PartId}): OnAfterRenderAsync (ASYNC) - ENTERED. firstRender = {FirstRender}", PartId, firstRender); // Added Logger here too
+
+        if (firstRender)
+        {
+            Console.WriteLine($"PartDetailPage ({PartId}): (firstRender = true) - Attempting to initialize 3D viewer for canvas '{viewerCanvasId}'.");
+            Logger.LogInformation("PartDetailPage ({PartId}): OnAfterRenderAsync - Attempting to init 3D viewer (firstRender=true)", PartId);
+            try
+            {
+                // ... (your existing JS interop calls for init and loadModel) ...
+                Console.WriteLine($"PartDetailPage ({PartId}): About to call JSRuntime for 'blazorModelViewer.init'.");
+                _isEngineInitialized = await JSRuntime.InvokeAsync<bool>("blazorModelViewer.init", viewerCanvasId);
+                Console.WriteLine($"PartDetailPage ({PartId}): JS 'blazorModelViewer.init' returned: {_isEngineInitialized}");
+                Logger.LogInformation("PartDetailPage ({PartId}): JS 'blazorModelViewer.init' returned: {IsEngineInitialized}", PartId, _isEngineInitialized);
+
+
+                if (_isEngineInitialized && part != null && !string.IsNullOrEmpty(part.ModelPath))
+                {
+                    Console.WriteLine($"PartDetailPage ({PartId}): Initial model load for: {part.ModelPath}");
+                    Logger.LogInformation("PartDetailPage ({PartId}): Initial model load for: {ModelPath}", PartId, part.ModelPath);
+                    await SafeLoadModel(part.ModelPath);
+                }
+                // ... (rest of the try-catch) ...
+            }
+            catch (Exception ex_afterrender_init)
+            {
+                Console.WriteLine($"PartDetailPage ({PartId}): EXCEPTION IN OnAfterRenderAsync (firstRender init block): {ex_afterrender_init.ToString()}");
+                Logger.LogError(ex_afterrender_init, "PartDetailPage ({PartId}): EXCEPTION IN OnAfterRenderAsync (firstRender init block)", PartId);
+                await SetModelError($"JS Interop Error during 3D init: {ex_afterrender_init.Message}");
+            }
+        }
+        Console.WriteLine($"PartDetailPage ({PartId}): OnAfterRenderAsync - EXITED.");
+        Logger.LogInformation("PartDetailPage ({PartId}): OnAfterRenderAsync (ASYNC) - EXITED.", PartId);
+    }
+
+    private void HandleClick()
+{
+    Console.WriteLine($"PartDetailPage ({PartId}): HandleClick method was EXECUTED!");
+    // Logger.LogInformation("PartDetailPage ({PartId}): HandleClick called!", PartId); // Keep if ILogger is injected and preferred
+}    private async Task SafeLoadModel(string? modelPath)
     {
         // ... (SafeLoadModel function as provided before)
         if (!_isEngineInitialized)

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj": {}
+    "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj": {}
   },
   "projects": {
-    "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj": {
+    "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
+        "projectUniqueName": "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
         "projectName": "rotaryproject",
-        "projectPath": "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
+        "projectPath": "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\rotaryproject.csproj",
         "packagesPath": "C:\\Users\\mcfuz\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\obj\\",
+        "outputPath": "C:\\Users\\mcfuz\\rotaryprojectmicrosoft\\rotaryproject\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\mcfuz\\AppData\\Roaming\\NuGet\\NuGet.Config"
