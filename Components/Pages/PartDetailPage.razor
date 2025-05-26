@@ -13,7 +13,7 @@
 @inject ILogger<PartDetailPage> Logger
 <ErrorBoundary>
     <ChildContent>
-<h3>Part Details (Ultra-Minimal Test)</h3>
+<h3>Part :</h3>
     
 @if (isLoading)
 {
@@ -26,13 +26,60 @@ else if (notFound)
 @* ... other @if conditions for isLoading / notFound ... *@
 else if (part != null)
 {
-    <div>
-        <h4>@part.Name</h4> @* This is safe if part is not null and Name is a string *@
-        <p>Model Path: @(part.ModelPath ?? "N/A")</p>
-        <p>Category: @(part.Category?.Name ?? "N/A")</p> @* Use null-conditional for navigation properties *@
-        @* Canvas for the 3D viewer *@
-        <canvas id="@viewerCanvasId" style="width: 100%; height: 400px; touch-action: none; border: 1px solid green; background-color: #f0f0f0;"></canvas>
-        <p id="modelError" style="color: red; min-height: 20px;"></p>
+    <div class="container mt-3"> @* Added a container for better spacing/layout *@
+        
+        @* 1. CATEGORY NAME *@
+        @if (part.Category != null)
+        {
+            <h5 class="text-muted mb-2">Category: @part.Category.Name</h5>
+        }
+        else
+        {
+            <h5 class="text-muted mb-2">Category: N/A</h5>
+        }
+
+        @* 2. PART NAME (as main heading) *@
+        <h1>@part.Name</h1>
+        <hr class="mt-1 mb-3"/>
+
+        @* 3. PART DESCRIPTION *@
+        @if (!string.IsNullOrWhiteSpace(part.Description))
+        {
+            <p class="lead">@part.Description</p>
+        }
+        else
+        {
+            <p class="text-muted"><em>No detailed description available for this part.</em></p>
+        }
+        <br />
+
+        @* 4. THE 3D MODEL VIEWER *@
+        <div class="mb-4"> @* Added margin bottom for spacing *@
+            <h4 class="mb-2">Preview</h4>
+            <canvas id="@viewerCanvasId" style="width: 100%; max-width: 700px; height: 450px; touch-action: none; border: 1px solid #dee2e6; background-color: #f8f9fa; display: block; margin-left: auto; margin-right: auto;"></canvas>
+            <p id="modelError" style="color: red; min-height: 20px; margin-top: 5px; text-align: center;"></p>
+        </div>
+        
+        @* OTHER DETAILS (SKU, Price, etc.) *@
+        <div class="mt-4">
+            <h4>Additional Details:</h4>
+            <dl class="row">
+                <dt class="col-sm-3">SKU</dt>
+                <dd class="col-sm-9">@(part.Sku ?? "N/A")</dd> @* Ensure 'Sku' casing matches your Part.cs *@
+
+                <dt class="col-sm-3">Base Price</dt>
+                <dd class="col-sm-9">@(part.BasePrice?.ToString("C") ?? "N/A")</dd>
+
+                @* You can add other fields from your Part model here if needed *@
+                @* For debugging purposes, you might want to keep these temporarily:
+                <dt class="col-sm-3">Model Path (debug)</dt>
+                <dd class="col-sm-9">@part.ModelPath</dd>
+                <dt class="col-sm-3">Image Path (debug)</dt>
+                <dd class="col-sm-9">@(part.ImagePath ?? "N/A")</dd>
+                *@
+            </dl>
+        </div>
+
     </div>
 }
 // ... rest of the page ...

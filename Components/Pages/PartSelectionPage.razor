@@ -1,0 +1,127 @@
+@page "/selectpart/{CategoryId:int}" // This defines the route and expects an integer CategoryId
+
+@rendermode InteractiveServer
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@using rotaryproject.Data
+@using rotaryproject.Data.Models // Your namespace for PartCategory, Part
+@using Microsoft.EntityFrameworkCore
+
+@if (isLoading)
+{
+    <p><em>Loading available parts...</em></p>
+}
+else if (currentCategory != null)
+{
+    <h3>Select a @currentCategory.Name</h3>
+    <hr />
+
+    @if (partsForCategory == null || !partsForCategory.Any())
+    {
+        <p><em>No parts found for the category: @currentCategory.Name.</em></p>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var part in partsForCategory)
+            {
+                <div class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-md-9">
+                            <h5 class="mb-1">@part.Name</h5>
+                            <p class="mb-1">@(part.Description ?? "No description available.")</p>
+                            <small class="text-muted">SKU: @(part.Sku ?? "N/A")</small>
+                            <small class="text-muted ms-2">Price: @(part.BasePrice?.ToString("C") ?? "N/A")</small>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            <button class="btn btn-success btn-sm" @onclick="() => SelectThisPart(part.PartId)">
+                                Select this @(currentCategory.Name.TrimEnd('s'))
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+else
+{
+    <p><em>Category not found or specified.</em></p>
+}
+
+<div class="mt-4">
+    <button class="btn btn-outline-secondary" @onclick="GoBackToBuilder">
+        <span class="oi oi-arrow-left" aria-hidden="true"></span> Cancel / Back to Engine Builder
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public int CategoryId { get; set; } // Receives the CategoryId from the route
+
+    private List<Part>? partsForCategory;
+    private PartCategory? currentCategory;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($"PartSelectionPage: OnParametersSetAsync - Loading parts for CategoryId {CategoryId}");
+        isLoading = true;
+        try
+        {
+            if (DbContext.PartCategories != null && DbContext.Parts != null && CategoryId > 0)
+            {
+                // Load the current category's details
+                currentCategory = await DbContext.PartCategories.FindAsync(CategoryId);
+
+                if (currentCategory != null)
+                {
+                    // Load parts belonging to this category
+                    // Ensure 'p.CategoryId' and 'p.Name' casing matches your Part.cs model
+                    partsForCategory = await DbContext.Parts
+                                                .Where(p => p.CategoryId == CategoryId)
+                                                .OrderBy(p => p.Name)
+                                                .ToListAsync();
+                    Console.WriteLine($"PartSelectionPage: Found {partsForCategory?.Count ?? 0} parts for category '{currentCategory.Name}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"PartSelectionPage: Category with ID {CategoryId} not found.");
+                    partsForCategory = new List<Part>(); // Initialize to empty
+                }
+            }
+            else
+            {
+                Console.WriteLine($"PartSelectionPage: Invalid CategoryId ({CategoryId}) or DbContext not ready.");
+                partsForCategory = new List<Part>(); // Initialize to empty
+                currentCategory = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"PartSelectionPage: Error loading parts or category: {ex.ToString()}");
+            partsForCategory = new List<Part>(); // Initialize to empty on error
+            currentCategory = null;
+            // You might want to display an error message to the user here
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SelectThisPart(int partId) // Ensure partId casing matches your Part.cs model (e.g., PartId)
+    {
+        Console.WriteLine($"PartSelectionPage: PartId {partId} selected for CategoryId {CategoryId}. Navigating back to builder.");
+        // Navigate back to EngineBuilderPage, passing the selection as query parameters
+        Navigation.NavigateTo($"/enginebuilder?passedCategoryId={CategoryId}&passedSelectedPartId={partId}", forceLoad: false);
+        // forceLoad: false is typical for Blazor internal navigation to avoid full page reload if possible
+        // The parameter names passedCategoryId and passedSelectedPartId must match the
+        // [SupplyParameterFromQuery] properties in EngineBuilderPage.razor
+    }
+
+    private void GoBackToBuilder()
+    {
+        Navigation.NavigateTo("/enginebuilder");
+    }
+}

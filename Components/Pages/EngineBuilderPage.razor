@@ -1,0 +1,174 @@
+@page "/enginebuilder"
+@rendermode InteractiveServer
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@using rotaryproject.Data
+@using rotaryproject.Data.Models
+@using Microsoft.EntityFrameworkCore
+
+<PageTitle>Build Your Rotary Engine</PageTitle>
+
+<h1>Choose Your Engine Parts</h1>
+
+@* TODO: Compatibility/Stats Bar will go here later *@
+
+@if (partCategories == null)
+{
+    <p><em>Loading categories...</em></p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table engine-builder-table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Selection</th>
+                    <th>Price</th> @* Example column, add more later *@
+                    <th></th> @* For the choose/change button *@
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in partCategories)
+                {
+                    <tr>
+                        <td><strong>@category.Name</strong></td>
+                        <td>
+                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPart) && selectedPart != null)
+                            {
+                                <a href="/partdetail/@selectedPart.PartId">@selectedPart.Name</a>
+                            }
+                            else
+                            {
+                                <em>No part selected</em>
+                            }
+                        </td>
+                        <td>
+                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
+                            {
+                                <span>@pricedPart.BasePrice.Value.ToString("C")</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? existingPart) && existingPart != null)
+                            {
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => SelectOrChangePart(category.CategoryId)">Change</button>
+                                <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => ClearPartSelection(category.CategoryId)">Clear</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(category.CategoryId)">+ Choose A @category.Name</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@* Styling (can be moved to a CSS file later) *@
+<style>
+    .engine-builder-table th, .engine-builder-table td {
+        vertical-align: middle;
+    }
+    .engine-builder-table td:nth-child(2) { /* Selection column */
+        min-width: 200px; /* Give some space for part names */
+    }
+</style>
+
+@code {
+    private List<PartCategory>? partCategories;
+    private EngineBuildConfiguration currentBuild = new EngineBuildConfiguration();
+
+    // Properties to receive selection data from query string
+    [SupplyParameterFromQuery]
+    public int? PassedCategoryId { get; set; }
+
+    [SupplyParameterFromQuery]
+    public int? PassedSelectedPartId { get; set; }
+
+    // Flag to ensure selection is processed only once per incoming query parameter set
+    private bool _selectionQueryProcessedThisNav = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - Loading part categories.");
+        if (DbContext.PartCategories != null)
+        {
+            partCategories = await DbContext.PartCategories.OrderBy(c => c.Name).ToListAsync();
+        }
+        else
+        {
+            partCategories = new List<PartCategory>();
+            Console.WriteLine("EngineBuilderPage: PartCategories DbSet is null.");
+        }
+        Console.WriteLine($"EngineBuilderPage: Loaded {partCategories?.Count ?? 0} categories.");
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($"EngineBuilderPage: OnParametersSetAsync - ENTERED. PassedCategoryId: {PassedCategoryId}, PassedSelectedPartId: {PassedSelectedPartId}");
+
+        if (PassedSelectedPartId.HasValue && PassedCategoryId.HasValue)
+        {
+            // Only process if this specific set of query parameters hasn't been processed yet
+            // This simple check might need refinement if user navigates back and forth with same params.
+            // A more robust way would be to compare with a previous state or use a GUID in the query.
+            // For now, we'll reset the flag when parameters are cleared.
+
+            // Let's re-evaluate how to process only once.
+            // The Navigation.NavigateTo below will cause this method to run again with null params.
+            // So, we just need to act if they are present.
+
+            Console.WriteLine($"EngineBuilderPage: Processing selection - CategoryID: {PassedCategoryId.Value}, PartID: {PassedSelectedPartId.Value}");
+
+            if (DbContext.Parts != null)
+            {
+                var part = await DbContext.Parts
+                                    .Include(p => p.Category) // Ensure p.Category casing matches Part.cs
+                                    .FirstOrDefaultAsync(p => p.PartId == PassedSelectedPartId.Value); // Ensure p.PartId casing matches Part.cs
+                
+                if (part != null)
+                {
+                    currentBuild.SelectPart(PassedCategoryId.Value, part); // Update the dictionary
+                    Console.WriteLine($"EngineBuilderPage: Part '{part.Name}' selected for category {PassedCategoryId.Value}. currentBuild.SelectedParts count: {currentBuild.SelectedParts.Count}");
+                    
+                    // Explicitly tell Blazor the state has changed and it needs to re-render
+                    StateHasChanged(); 
+                }
+                else
+                {
+                    Console.WriteLine($"EngineBuilderPage: Selected part with ID {PassedSelectedPartId.Value} not found in DB.");
+                }
+            }
+            else
+            {
+                 Console.WriteLine("EngineBuilderPage: DbContext.Parts is null. Cannot fetch selected part.");
+            }
+
+            // Navigate to clean URL to remove query parameters.
+            // This will trigger OnParametersSetAsync again, but PassedSelectedPartId/PassedCategoryId will be null.
+            Navigation.NavigateTo("/enginebuilder", replace: true); 
+        }
+        Console.WriteLine($"EngineBuilderPage: OnParametersSetAsync - EXITED.");
+    }
+
+    private void SelectOrChangePart(int categoryId) // Ensure categoryId casing matches PartCategory.cs
+    {
+        Console.WriteLine($"EngineBuilderPage: Navigating to select part for CategoryID: {categoryId}");
+        Navigation.NavigateTo($"/selectpart/{categoryId}");
+    }
+
+    private void ClearPartSelection(int categoryId) // Ensure categoryId casing matches PartCategory.cs
+    {
+        Console.WriteLine($"EngineBuilderPage: Clearing part selection for CategoryID: {categoryId}");
+        currentBuild.SelectPart(categoryId, null); 
+        // StateHasChanged(); // Usually not needed if dictionary change is picked up by the @foreach
+                           // but add it if UI doesn't update after clearing.
+    }
+}
