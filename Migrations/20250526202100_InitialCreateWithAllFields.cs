@@ -5,7 +5,7 @@
 namespace rotaryproject.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPartsTable : Migration
+    public partial class InitialCreateWithAllFields : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,22 +28,31 @@ namespace rotaryproject.Migrations
                 name: "Parts",
                 columns: table => new
                 {
-                    PartID = table.Column<int>(type: "int", nullable: false)
+                    PartId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    CategoryID = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    SKU = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Sku = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ModelPath = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
                     ImagePath = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    BasePrice = table.Column<decimal>(type: "decimal(10,2)", nullable: true)
+                    BasePrice = table.Column<decimal>(type: "decimal(10,2)", nullable: true),
+                    Brand = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Material = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    PieceCount = table.Column<int>(type: "int", nullable: true),
+                    SizeMm = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    ManufacturingYear = table.Column<int>(type: "int", nullable: true),
+                    SealAmount = table.Column<int>(type: "int", nullable: true),
+                    EngineCompatibility = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Rating = table.Column<double>(type: "float", nullable: true),
+                    RatingCount = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK__Parts__7C3F0D3095AB3286", x => x.PartID);
+                    table.PrimaryKey("PK__Parts__7C3F0D3095AB3286", x => x.PartId);
                     table.ForeignKey(
                         name: "FK__Parts__CategoryI__3B75D760",
-                        column: x => x.CategoryID,
+                        column: x => x.CategoryId,
                         principalTable: "PartCategories",
                         principalColumn: "CategoryID");
                 });
@@ -66,12 +75,12 @@ namespace rotaryproject.Migrations
                         name: "FK__Compatibi__PartA__4316F928",
                         column: x => x.PartA_ID,
                         principalTable: "Parts",
-                        principalColumn: "PartID");
+                        principalColumn: "PartId");
                     table.ForeignKey(
                         name: "FK__Compatibi__PartB__440B1D61",
                         column: x => x.PartB_ID,
                         principalTable: "Parts",
-                        principalColumn: "PartID");
+                        principalColumn: "PartId");
                 });
 
             migrationBuilder.CreateTable(
@@ -92,7 +101,7 @@ namespace rotaryproject.Migrations
                         name: "FK__PartStats__PartI__3E52440B",
                         column: x => x.PartID,
                         principalTable: "Parts",
-                        principalColumn: "PartID",
+                        principalColumn: "PartId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -119,21 +128,9 @@ namespace rotaryproject.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Parts_CategoryID",
+                name: "IX_Parts_CategoryId",
                 table: "Parts",
-                column: "CategoryID");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Parts_Name",
-                table: "Parts",
-                column: "Name");
-
-            migrationBuilder.CreateIndex(
-                name: "UQ__Parts__CA1ECF0DDFFFB887",
-                table: "Parts",
-                column: "SKU",
-                unique: true,
-                filter: "[SKU] IS NOT NULL");
+                column: "CategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PartStats_PartID",

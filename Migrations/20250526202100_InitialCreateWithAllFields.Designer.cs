@@ -11,8 +11,8 @@ using rotaryproject.Data;
 namespace rotaryproject.Migrations
 {
     [DbContext(typeof(RotaryEngineDbContext))]
-    [Migration("20250526191113_AddDetailedPartProperties")]
-    partial class AddDetailedPartProperties
+    [Migration("20250526202100_InitialCreateWithAllFields")]
+    partial class InitialCreateWithAllFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

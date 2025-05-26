@@ -1,67 +1,132 @@
-@page "/selectpart/{CategoryId:int}" // This defines the route and expects an integer CategoryId
+@page "/selectpart/{CategoryId:int}"
+@rendermode InteractiveServer // Important for interactivity and filters
 
-@rendermode InteractiveServer
 @inject RotaryEngineDbContext DbContext
 @inject NavigationManager Navigation
-@using rotaryproject.Data
 @using rotaryproject.Data.Models
+@using rotaryproject.Data
 @using Microsoft.EntityFrameworkCore
+@using System.Linq.Expressions // For dynamic filtering later
+
+<PageTitle>Choose @(currentCategory?.Name ?? "Part")</PageTitle>
 
 @if (isLoading)
 {
-    <p><em>Loading available parts...</em></p>
+    <p><em>Loading parts...</em></p>
 }
 else if (currentCategory != null)
 {
-    <h3>Select a @currentCategory.Name</h3>
-    <hr />
-
-    @if (partsForCategory == null || !partsForCategory.Any())
-    {
-        <p><em>No parts found for the category: @currentCategory.Name.</em></p>
-    }
-    else
-    {
-        <div class="list-group">
-            @foreach (var part in partsForCategory)
-            {
-                <div class="list-group-item">
-                    <div class="row align-items-center">
-                        <div class="col-md-9">
-                            <h5 class="mb-1">@part.Name</h5>
-                            <p class="mb-1">@(part.Description ?? "No description available.")</p>
-                            <small class="text-muted">SKU: @(part.Sku ?? "N/A")</small>
-                            <small class="text-muted ms-2">Price: @(part.BasePrice?.ToString("C") ?? "N/A")</small>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <button class="btn btn-success btn-sm" @onclick="() => SelectThisPart(part.PartId)">
-                                Select this @(currentCategory.Name.TrimEnd('s'))
-                            </button>
-                        </div>
-                    </div>
+    <div class="container-fluid mt-3">
+        <div class="row">
+            @* Column for Filters (Phase 2) *@
+            <div class="col-md-3">
+                <h4>Filters</h4>
+                <hr />
+                <p><em>Filters will go here.</em></p>
+                @* Example Filter (we'll make this dynamic later) *@
+                <div class="mb-2">
+                    <label for="brandFilter" class="form-label">Brand:</label>
+                    <InputText id="brandFilter" class="form-control form-control-sm" @bind-Value="filterBrand" @oninput="ApplyFilters" />
                 </div>
-            }
+                 <div class="mb-2">
+                    <label for="materialFilter" class="form-label">Material:</label>
+                    <InputText id="materialFilter" class="form-control form-control-sm" @bind-Value="filterMaterial" @oninput="ApplyFilters" />
+                </div>
+                <button class="btn btn-sm btn-outline-secondary mt-2" @onclick="ClearFilters">Clear All Filters</button>
+            </div>
+
+            @* Column for Parts List *@
+            <div class="col-md-9">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>Available @currentCategory.Name (@(filteredPartsForCategory?.Count ?? 0) of @(allPartsForCategory?.Count ?? 0) products)</h3>
+                    @* TODO: Add sorting options here later *@
+                </div>
+                <hr />
+
+                @if (filteredPartsForCategory == null || !filteredPartsForCategory.Any())
+                {
+                    <p><em>No parts match your current filters or none available for this category.</em></p>
+                }
+                else
+                {
+                    <div class="list-group">
+                        @foreach (var part in filteredPartsForCategory)
+                        {
+                            <div class="list-group-item mb-2 shadow-sm">
+                                <div class="row g-3 align-items-center">
+                                    <div class="col-md-2 text-center">
+                                        @* Placeholder for Image *@
+                                        @if (!string.IsNullOrEmpty(part.ImagePath))
+                                        {
+                                            <img src="@part.ImagePath" alt="@part.Name" class="img-fluid rounded" style="max-height: 100px; max-width: 100%;" 
+                                                 onerror="this.onerror=null; this.src='https://placehold.co/100x100/e1e1e1/777?text=No+Image';" />
+                                        }
+                                        else
+                                        {
+                                            <img src="https://placehold.co/100x100/e1e1e1/777?text=No+Image" alt="No image available" class="img-fluid rounded" style="max-height: 100px; max-width: 100%;" />
+                                        }
+                                    </div>
+                                    <div class="col-md-7">
+                                        <h5>
+                                            <a href="/partdetail/@part.PartId">@part.Name</a> @* Hyperlink to part detail page *@
+                                        </h5>
+                                        <ul class="list-unstyled small text-muted mb-1">
+                                            @if (!string.IsNullOrEmpty(part.Brand)) { <li><strong>Brand:</strong> @part.Brand</li> }
+                                            @if (!string.IsNullOrEmpty(part.Material)) { <li><strong>Material:</strong> @part.Material</li> }
+                                            @if (part.PieceCount.HasValue) { <li><strong>Piece Count:</strong> @part.PieceCount</li> }
+                                            @if (!string.IsNullOrEmpty(part.SizeMm)) { <li><strong>Size:</strong> @part.SizeMm</li> }
+                                            @if (part.ManufacturingYear.HasValue) { <li><strong>Year:</strong> @part.ManufacturingYear</li> }
+                                            @if (part.SealAmount.HasValue) { <li><strong>Seal Amount:</strong> @part.SealAmount</li> }
+                                            @if (!string.IsNullOrEmpty(part.EngineCompatibility)) { <li><strong>Engine:</strong> @part.EngineCompatibility</li> }
+                                        </ul>
+                                        @* Placeholder for Rating - you'd need a component or logic to display stars *@
+                                        @if (part.Rating.HasValue) { 
+                                            <small class="text-warning">Rating: @part.Rating.Value.ToString("0.0") stars (@(part.RatingCount ?? 0) reviews)</small> 
+                                        } else {
+                                            <small class="text-muted">No rating</small>
+                                        }
+                                    </div>
+                                    <div class="col-md-3 text-end">
+                                        <h4>@(part.BasePrice?.ToString("C") ?? "N/A")</h4>
+                                        <button class="btn btn-success btn-sm mt-2" @onclick="() => SelectThisPart(part.PartId)">
+                                            Add to Build
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
-    }
+        <div class="mt-4">
+            <button class="btn btn-outline-secondary" @onclick="GoBackToBuilder">
+                <span class="oi oi-arrow-left" aria-hidden="true"></span> Cancel / Back to Engine Builder
+            </button>
+        </div>
+    </div>
 }
 else
 {
-    <p><em>Category not found or specified.</em></p>
+    <PageTitle>Category Not Found</PageTitle>
+    <h1>Category Not Found</h1>
+    <p><em>The selected category (ID: @CategoryId) was not found.</em></p>
 }
 
-<div class="mt-4">
-    <button class="btn btn-outline-secondary" @onclick="GoBackToBuilder">
-        <span class="oi oi-arrow-left" aria-hidden="true"></span> Cancel / Back to Engine Builder
-    </button>
-</div>
 
 @code {
     [Parameter]
-    public int CategoryId { get; set; } // Receives the CategoryId from the route
+    public int CategoryId { get; set; }
 
-    private List<Part>? partsForCategory;
+    private List<Part>? allPartsForCategory; // All parts for the category before filtering
+    private List<Part>? filteredPartsForCategory; // Parts after filtering
     private PartCategory? currentCategory;
     private bool isLoading = true;
+
+    // Filter properties
+    private string? filterBrand { get; set; }
+    private string? filterMaterial { get; set; }
+    // Add more filter properties as needed (e.g., minPrice, maxPrice, specific engine compatibility)
 
     protected override async Task OnParametersSetAsync()
     {
@@ -71,53 +136,64 @@ else
         {
             if (DbContext.PartCategories != null && DbContext.Parts != null && CategoryId > 0)
             {
-                // Load the current category's details
                 currentCategory = await DbContext.PartCategories.FindAsync(CategoryId);
-
                 if (currentCategory != null)
                 {
-                    // Load parts belonging to this category
-                    // Ensure 'p.CategoryId' and 'p.Name' casing matches your Part.cs model
-                    partsForCategory = await DbContext.Parts
+                    // Load ALL parts for this category initially
+                    allPartsForCategory = await DbContext.Parts
                                                 .Where(p => p.CategoryId == CategoryId)
                                                 .OrderBy(p => p.Name)
                                                 .ToListAsync();
-                    Console.WriteLine($"PartSelectionPage: Found {partsForCategory?.Count ?? 0} parts for category '{currentCategory.Name}'.");
+                    ApplyFilters(); // Apply initial (empty) filters
+                    Console.WriteLine($"PartSelectionPage: Found {allPartsForCategory?.Count ?? 0} total parts for category '{currentCategory.Name}'.");
                 }
-                else
-                {
-                    Console.WriteLine($"PartSelectionPage: Category with ID {CategoryId} not found.");
-                    partsForCategory = new List<Part>(); // Initialize to empty
-                }
+                else { /* ... handle category not found ... */ allPartsForCategory = new List<Part>(); filteredPartsForCategory = new List<Part>(); }
             }
-            else
-            {
-                Console.WriteLine($"PartSelectionPage: Invalid CategoryId ({CategoryId}) or DbContext not ready.");
-                partsForCategory = new List<Part>(); // Initialize to empty
-                currentCategory = null;
-            }
+            else { /* ... handle invalid CategoryId or DbContext ... */ allPartsForCategory = new List<Part>(); filteredPartsForCategory = new List<Part>(); currentCategory = null; }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"PartSelectionPage: Error loading parts or category: {ex.ToString()}");
-            partsForCategory = new List<Part>(); // Initialize to empty on error
-            currentCategory = null;
-            // You might want to display an error message to the user here
-        }
-        finally
-        {
-            isLoading = false;
-        }
+        catch (Exception ex) { /* ... handle exception ... */ allPartsForCategory = new List<Part>(); filteredPartsForCategory = new List<Part>(); currentCategory = null; }
+        finally { isLoading = false; }
     }
 
-    private void SelectThisPart(int partId) // Ensure partId casing matches your Part.cs model (e.g., PartId)
+    private void ApplyFilters()
+    {
+        Console.WriteLine($"PartSelectionPage: Applying filters. Brand: '{filterBrand}', Material: '{filterMaterial}'");
+        if (allPartsForCategory == null)
+        {
+            filteredPartsForCategory = new List<Part>();
+            return;
+        }
+
+        IEnumerable<Part> query = allPartsForCategory;
+
+        if (!string.IsNullOrWhiteSpace(filterBrand))
+        {
+            query = query.Where(p => p.Brand != null && p.Brand.Contains(filterBrand, StringComparison.OrdinalIgnoreCase));
+        }
+        if (!string.IsNullOrWhiteSpace(filterMaterial))
+        {
+            query = query.Where(p => p.Material != null && p.Material.Contains(filterMaterial, StringComparison.OrdinalIgnoreCase));
+        }
+        // Add more filter conditions here based on your filter properties
+
+        filteredPartsForCategory = query.ToList();
+        Console.WriteLine($"PartSelectionPage: After filtering, {filteredPartsForCategory.Count} parts remain.");
+        // StateHasChanged(); // Usually not needed if @oninput is used on filter inputs, but can be added if UI doesn't update
+    }
+
+    private void ClearFilters()
+    {
+        filterBrand = null;
+        filterMaterial = null;
+        // Reset other filter properties
+        ApplyFilters();
+        StateHasChanged(); // Ensure UI updates after clearing filters
+    }
+
+    private void SelectThisPart(int partId)
     {
         Console.WriteLine($"PartSelectionPage: PartId {partId} selected for CategoryId {CategoryId}. Navigating back to builder.");
-        // Navigate back to EngineBuilderPage, passing the selection as query parameters
         Navigation.NavigateTo($"/enginebuilder?passedCategoryId={CategoryId}&passedSelectedPartId={partId}", forceLoad: false);
-        // forceLoad: false is typical for Blazor internal navigation to avoid full page reload if possible
-        // The parameter names passedCategoryId and passedSelectedPartId must match the
-        // [SupplyParameterFromQuery] properties in EngineBuilderPage.razor
     }
 
     private void GoBackToBuilder()

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Collections.Generic; // For ICollection
-
+using rotaryproject.Data;
 namespace rotaryproject.Data.Models
 {
     public class Part
