@@ -1,54 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic; // For ICollection
 
-namespace rotaryproject.Data.Models; // Ensure this namespace is correct
-
-[Index("CategoryId", Name = "IX_Parts_CategoryID")] // Note: This references "CategoryId" (lowercase 'd')
-[Index("Name", Name = "IX_Parts_Name")]
-// If you change Sku C# property to SKU, this Index might need to be [Index("SKU", ...)] if your DB column is SKU
-[Index("Sku", Name = "UQ__Parts__CA1ECF0DDFFFB887", IsUnique = true)] // This references "Sku" (lowercase 'k','u')
-public partial class Part
+namespace rotaryproject.Data.Models
 {
-    [Key]
-    // If C# property is PartID and DB column is PartID, [Column("PartID")] is redundant but harmless.
-    [Column("PartId")]
-    public int PartId { get; set; } // MODIFIED to PartID (all caps ID)
+    public class Part
+    {
+        [Key]
+        public int PartId { get; set; } // Ensure casing matches your DB/usage
 
-    [Column("CategoryID")]
-    public int CategoryId { get; set; } // Kept as CategoryId, ensure Razor uses this casing
+        [Required]
+        public int CategoryId { get; set; } // Ensure casing matches your DB/usage
 
-    [StringLength(150)]
-    public string Name { get; set; } = null!;
+        [Required]
+        [StringLength(150)]
+        public string Name { get; set; } = string.Empty;
 
-    // If C# property is SKU and DB column is SKU, [Column("SKU")] is redundant but harmless.
-    [Column("Sku")]
-    [StringLength(50)]
-    public string? Sku { get; set; } // MODIFIED to SKU (all caps)
+        [StringLength(50)]
+        public string? Sku { get; set; } // Ensure casing matches your DB/usage
 
-    public string? Description { get; set; }
+        public string? Description { get; set; }
 
-    [StringLength(255)]
-    public string ModelPath { get; set; } = null!;
+        [Required]
+        [StringLength(255)]
+        public string ModelPath { get; set; } = string.Empty; // For 3D model
 
-    [StringLength(255)]
-    public string? ImagePath { get; set; }
+        [StringLength(255)]
+        public string? ImagePath { get; set; } // For 2D thumbnail image
 
-    [Column(TypeName = "decimal(10, 2)")]
-    public decimal? BasePrice { get; set; }
+        [Column(TypeName = "decimal(10, 2)")]
+        public decimal? BasePrice { get; set; }
 
-    [ForeignKey("CategoryId")] // This references the C# property "CategoryId"
-    [InverseProperty("Parts")]
-    public virtual PartCategory Category { get; set; } = null!;
+        // New properties for detailed information (some might move to PartStats or related tables later)
+        [StringLength(100)]
+        public string? Brand { get; set; }
 
-    [InverseProperty("PartA")]
-    public virtual ICollection<CompatibilityRule> CompatibilityRulePartAs { get; set; } = new List<CompatibilityRule>();
+        [StringLength(100)]
+        public string? Material { get; set; }
 
-    [InverseProperty("PartB")]
-    public virtual ICollection<CompatibilityRule> CompatibilityRulePartBs { get; set; } = new List<CompatibilityRule>();
+        public int? PieceCount { get; set; } // e.g., for seals
 
-    [InverseProperty("Part")]
-    public virtual ICollection<PartStat> PartStats { get; set; } = new List<PartStat>();
+        [StringLength(50)]
+        public string? SizeMm { get; set; } // e.g., "2mm", "3mm"
+
+        public int? ManufacturingYear { get; set; }
+
+        public int? SealAmount { get; set; } // How many seals are in this part/package
+
+        [StringLength(100)]
+        public string? EngineCompatibility { get; set; } // General engine series, e.g., "13B-REW", "All 12A"
+
+        public double? Rating { get; set; } // e.g., 0-5 stars
+        public int? RatingCount { get; set; } // Number of reviews
+
+
+        // Navigation property back to the category
+        [ForeignKey("CategoryId")]
+        public virtual PartCategory? Category { get; set; }
+
+        // Navigation property to PartStats (if you use this for some attributes)
+        public virtual ICollection<PartStat> PartStats { get; set; } = new List<PartStat>();
+
+        // Navigation properties for compatibility rules (already present from previous steps)
+        [InverseProperty("PartA")]
+        public virtual ICollection<CompatibilityRule> CompatibilityRulePartAs { get; set; } = new List<CompatibilityRule>();
+
+        [InverseProperty("PartB")]
+        public virtual ICollection<CompatibilityRule> CompatibilityRulePartBs { get; set; } = new List<CompatibilityRule>();
+    }
 }
