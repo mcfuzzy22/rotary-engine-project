@@ -33,6 +33,14 @@ namespace rotaryproject.Data.Models
         // New properties for detailed information (some might move to PartStats or related tables later)
         [StringLength(100)]
         public string? Brand { get; set; }
+         [StringLength(100)]
+        public string? Availability { get; set; } // e.g., "In Stock", "Backorder", "Ships in 2-3 days"
+
+        [StringLength(100)]
+        public string? VendorName { get; set; } // e.g., "MAZDATRIX", "Amazon", "Rotary Performance"
+
+        [StringLength(512)] // URL can be long
+        public string? VendorProductUrl { get; set; } // Direct link to buy the product
 
         [StringLength(100)]
         public string? Material { get; set; }

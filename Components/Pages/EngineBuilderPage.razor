@@ -20,53 +20,123 @@ else
 {
     <div class="table-responsive">
         <table class="table engine-builder-table">
-            <thead>
-                <tr>
-                    <th>Component</th>
-                    <th>Selection</th>
-                    <th>Price</th> @* Example column, add more later *@
-                    <th></th> @* For the choose/change button *@
-                </tr>
-            </thead>
+            <thead class="table-light">
+    <tr>
+        <th style="width: 15%;">Component</th>
+        <th style="width: 10%;">Image</th> @* New Column *@
+        <th style="width: 30%;">Selection</th>
+        <th style="width: 10%;">Availability</th> @* New Column *@
+        <th style="width: 10%;">Vendor</th> @* New Column *@
+        <th style="width: 10%;">Price</th>
+        <th style="width: 15%;">Actions / Buy</th> @* Combined Actions and Buy *@
+    </tr>
+</thead>
             <tbody>
-                @foreach (var category in partCategories)
+    @foreach (var category in partCategories)
+    {
+        <tr>
+            <td><strong>@category.Name</strong></td>
+            <td>
+                @* IMAGE COLUMN *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? imgPart) && imgPart != null && !string.IsNullOrEmpty(imgPart.ImagePath))
                 {
-                    <tr>
-                        <td><strong>@category.Name</strong></td>
-                        <td>
-                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPart) && selectedPart != null)
-                            {
-                                <a href="/partdetail/@selectedPart.PartId">@selectedPart.Name</a>
-                            }
-                            else
-                            {
-                                <em>No part selected</em>
-                            }
-                        </td>
-                        <td>
-                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
-                            {
-                                <span>@pricedPart.BasePrice.Value.ToString("C")</span>
-                            }
-                            else
-                            {
-                                <span>-</span>
-                            }
-                        </td>
-                        <td>
-                            @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? existingPart) && existingPart != null)
-                            {
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="() => SelectOrChangePart(category.CategoryId)">Change</button>
-                                <button class="btn btn-sm btn-outline-danger ms-1" @onclick="() => ClearPartSelection(category.CategoryId)">Clear</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(category.CategoryId)">+ Choose @category.Name</button>
-                            }
-                        </td>
-                    </tr>
+                    <img src="@imgPart.ImagePath" alt="@imgPart.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;" 
+                         onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" />
                 }
-            </tbody>
+                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheck) && selectedPartCheck != null)
+                {
+                    <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image available" style="max-width: 75px; max-height: 75px; object-fit: contain;" />
+                }
+            </td>
+            <td>
+                @* SELECTION (NAME & DESCRIPTION/SPECS) *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPart) && selectedPart != null)
+                {
+                    <a href="/partdetail/@selectedPart.PartId"><strong>@selectedPart.Name</strong></a>
+                    @if(!string.IsNullOrWhiteSpace(selectedPart.Brand))
+                    {
+                        <br /><small class="text-muted">Brand: @selectedPart.Brand</small>
+                    }
+                    @* You can add other key specs here from selectedPart.Description or other properties *@
+                    @if (!string.IsNullOrWhiteSpace(selectedPart.Description) && selectedPart.Description.Length < 100)
+                    {
+                        <br /><small class="text-muted">@selectedPart.Description</small>
+                    }
+                    else if(!string.IsNullOrWhiteSpace(selectedPart.Description))
+                    {
+                        <br /><small class="text-muted">@selectedPart.Description.Substring(0, Math.Min(selectedPart.Description.Length, 97))... </small>
+                    }
+                }
+                else
+                {
+                    <span class="text-muted">No part selected</span>
+                }
+            </td>
+            <td>
+                @* AVAILABILITY *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? availPart) && availPart != null && !string.IsNullOrEmpty(availPart.Availability))
+                {
+                    <span>@availPart.Availability</span>
+                }
+                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForAvail) && selectedPartCheckForAvail != null)
+                {
+                    <span class="text-muted">-</span>
+                }
+            </td>
+            <td>
+                @* VENDOR *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? vendorPart) && vendorPart != null && !string.IsNullOrEmpty(vendorPart.VendorName))
+                {
+                    @if(!string.IsNullOrEmpty(vendorPart.VendorProductUrl))
+                    {
+                        <a href="@vendorPart.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPart.VendorName</a>
+                    }
+                    else
+                    {
+                        <span>@vendorPart.VendorName</span>
+                    }
+                }
+                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForVendor) && selectedPartCheckForVendor != null)
+                {
+                    <span class="text-muted">-</span>
+                }
+            </td>
+            <td>
+                @* PRICE *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
+                {
+                    <strong>@pricedPart.BasePrice.Value.ToString("C")</strong>
+                }
+                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForPrice) && selectedPartCheckForPrice != null)
+                {
+                    <span class="text-muted">N/A</span>
+                }
+                else
+                {
+                     <span class="text-muted">-</span>
+                }
+            </td>
+            <td>
+                @* ACTIONS / BUY BUTTON *@
+                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? existingPart) && existingPart != null)
+                {
+                    <div class="d-flex flex-column">
+                        @if (!string.IsNullOrEmpty(existingPart.VendorProductUrl))
+                        {
+                            <a href="@existingPart.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a>
+                        }
+                        <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(category.CategoryId)">Change</button>
+                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(category.CategoryId)">Clear</button>
+                    </div>
+                }
+                else
+                {
+                    <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(category.CategoryId)">+ Choose A @category.Name</button>
+                }
+            </td>
+        </tr>
+    }
+</tbody>
         </table>
     </div>
 }
