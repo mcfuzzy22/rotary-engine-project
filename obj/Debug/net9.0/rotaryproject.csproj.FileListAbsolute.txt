@@ -149,7 +149,6 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\C
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\bundle\rotaryproject.styles.css
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\scopedcss\projectbundle\rotaryproject.bundle.scp.css
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\ggmeh1l88f-khy4lop6wu.gz
-C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\x004i6yipr-51enk7pbjy.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\kfaqv1hzlo-bqjiyaj88i.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\ocw6srji6y-c2jlpeoesf.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\41k320kqfe-erw9l3u2r3.gz
@@ -194,6 +193,7 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\27koq37i9u-h1s4sie4z3.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\d9zl5ehaht-63fj8s7r0e.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\15dbdaqckx-0j3bgjxly4.gz
+C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\snsc9bysdi-3lzqc5fqnv.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\lch0f2ck5p-t2bmsg4byl.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\myvlq1g0ka-t2bmsg4byl.gz
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\staticwebassets.build.json
@@ -206,3 +206,4 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\refint\rota
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.pdb
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.genruntimeconfig.cache
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\ref\rotaryproject.dll
+C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\x004i6yipr-79ru7d30ij.gz

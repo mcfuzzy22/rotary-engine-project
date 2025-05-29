@@ -1,6 +1,7 @@
 using rotaryproject.Components;
 using Microsoft.EntityFrameworkCore;
 using rotaryproject.Data;
+using rotaryproject.Data.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -10,11 +11,13 @@ builder.Services.AddRazorComponents()
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Register RotaryEngineDbContext with the application's services
+
 builder.Services.AddDbContext<RotaryEngineDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
            .LogTo(Console.WriteLine, LogLevel.Information) // <<< ADD THIS LINE
            .EnableSensitiveDataLogging() // <<< ADD THIS FOR MORE DETAIL (remove for production)
 );
+builder.Services.AddScoped<rotaryproject.Services.EngineBuildStateService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

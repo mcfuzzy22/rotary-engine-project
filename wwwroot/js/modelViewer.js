@@ -162,4 +162,5 @@ window.blazorModelViewer = {
         scene = null; // Ensure scene reference is cleared
         arcRotateCamera = null; // Clear camera reference
     }
+    
 };

@@ -1,7 +1,7 @@
 // In EngineBuildConfiguration.cs
 using rotaryproject.Data.Models; // Your namespace for the Part model
 using System.Collections.Generic;
-
+using rotaryproject.Data;
 namespace rotaryproject.Data // Or your preferred namespace for ViewModels
 {
     public class EngineBuildConfiguration
@@ -10,7 +10,7 @@ namespace rotaryproject.Data // Or your preferred namespace for ViewModels
         public Dictionary<int, Part?> SelectedParts { get; set; }
 
         // You can add other properties later, e.g.:
-        // public decimal TotalPrice { get; set; }
+        public decimal TotalPrice { get; set; }
         // public List<string> CompatibilityIssues { get; set; } = new List<string>();
         // public EngineOverallStats? CalculatedStats { get; set; }
 

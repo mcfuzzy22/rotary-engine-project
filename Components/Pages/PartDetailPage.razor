@@ -55,9 +55,18 @@ else if (part != null)
 
         @* 4. THE 3D MODEL VIEWER *@
         <div class="mb-4"> @* Added margin bottom for spacing *@
-            <h4 class="mb-2">Preview</h4>
-            <canvas id="@viewerCanvasId" style="width: 100%; max-width: 700px; height: 450px; touch-action: none; border: 1px solid #dee2e6; background-color: #f8f9fa; display: block; margin-left: auto; margin-right: auto;"></canvas>
-            <p id="modelError" style="color: red; min-height: 20px; margin-top: 5px; text-align: center;"></p>
+            <dt class="col-sm-3">Image Preview</dt>
+        <dd class="col-sm-9">
+            @if (!string.IsNullOrWhiteSpace(part.ImagePath))
+            {
+                <img src="@part.ImagePath" alt="Image of @part.Name" class="img-fluid rounded border" style="max-height: 400px; max-width: 100%; object-fit: contain;"
+                     onerror="this.onerror=null; this.src='https://placehold.co/600x400/e1e1e1/777?text=Image+Not+Found'; this.alt='Image not found';" />
+            }
+            else
+            {
+                <img src="https://placehold.co/600x400/e1e1e1/777?text=No+Image+Available" alt="No image available" class="img-fluid rounded border" style="max-height: 400px; max-width: 100%;" />
+            }
+        </dd>
         </div>
         
         @* OTHER DETAILS (SKU, Price, etc.) *@

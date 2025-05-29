@@ -1,7 +1,10 @@
 @page "/enginebuilder"
 @rendermode InteractiveServer
+
 @inject RotaryEngineDbContext DbContext
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+@inject rotaryproject.Services.EngineBuildStateService BuildStateService
 @using rotaryproject.Data
 @using rotaryproject.Data.Models
 @using Microsoft.EntityFrameworkCore
@@ -10,235 +13,380 @@
 
 <h1>Choose Your Engine Parts</h1>
 
-@* TODO: Compatibility/Stats Bar will go here later *@
+<div class="compatibility-summary my-3 p-3 bg-light border rounded" style="min-height: 50px;">
+    <p class="mb-0"><em>Compatibility and overall stats will appear here. Current Total: @BuildStateService.CurrentBuild.TotalPrice.ToString("C")</em></p>
+</div>
 
 @if (partCategories == null)
 {
     <p><em>Loading categories...</em></p>
 }
+else if (!partCategories.Any())
+{
+    <p><em>No part categories found. Please add some categories first.</em></p>
+}
 else
 {
-    <div class="table-responsive">
-        <table class="table engine-builder-table">
-            <thead class="table-light">
-    <tr>
-        <th style="width: 15%;">Component</th>
-        <th style="width: 10%;">Image</th> @* New Column *@
-        <th style="width: 30%;">Selection</th>
-        <th style="width: 10%;">Availability</th> @* New Column *@
-        <th style="width: 10%;">Vendor</th> @* New Column *@
-        <th style="width: 10%;">Price</th>
-        <th style="width: 15%;">Actions / Buy</th> @* Combined Actions and Buy *@
-    </tr>
-</thead>
-            <tbody>
-    @foreach (var category in partCategories)
+    @* --- "SHARE YOUR BUILD" BLOCK --- *@
+    @if (BuildStateService.CurrentBuild.SelectedParts.Any())
     {
-        <tr>
-            <td><strong>@category.Name</strong></td>
-            <td>
-                @* IMAGE COLUMN *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? imgPart) && imgPart != null && !string.IsNullOrEmpty(imgPart.ImagePath))
+        <div class="mt-4 mb-3 p-3 border rounded bg-light">
+            <h4>Share Your Build</h4>
+            <div class="input-group">
+                <input type="text" class="form-control" @bind="shareableLink" readonly
+                       placeholder="Click 'Generate Link' to create a shareable link." />
+                <button class="btn btn-info" @onclick="GenerateShareableLink">Generate Link</button>
+                @if (!string.IsNullOrEmpty(shareableLink))
                 {
-                    <img src="@imgPart.ImagePath" alt="@imgPart.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;" 
-                         onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" />
+                    <button class="btn btn-outline-secondary" @onclick="CopyLinkToClipboard">Copy</button>
                 }
-                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheck) && selectedPartCheck != null)
-                {
-                    <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image available" style="max-width: 75px; max-height: 75px; object-fit: contain;" />
-                }
-            </td>
-            <td>
-                @* SELECTION (NAME & DESCRIPTION/SPECS) *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPart) && selectedPart != null)
-                {
-                    <a href="/partdetail/@selectedPart.PartId"><strong>@selectedPart.Name</strong></a>
-                    @if(!string.IsNullOrWhiteSpace(selectedPart.Brand))
-                    {
-                        <br /><small class="text-muted">Brand: @selectedPart.Brand</small>
-                    }
-                    @* You can add other key specs here from selectedPart.Description or other properties *@
-                    @if (!string.IsNullOrWhiteSpace(selectedPart.Description) && selectedPart.Description.Length < 100)
-                    {
-                        <br /><small class="text-muted">@selectedPart.Description</small>
-                    }
-                    else if(!string.IsNullOrWhiteSpace(selectedPart.Description))
-                    {
-                        <br /><small class="text-muted">@selectedPart.Description.Substring(0, Math.Min(selectedPart.Description.Length, 97))... </small>
-                    }
-                }
-                else
-                {
-                    <span class="text-muted">No part selected</span>
-                }
-            </td>
-            <td>
-                @* AVAILABILITY *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? availPart) && availPart != null && !string.IsNullOrEmpty(availPart.Availability))
-                {
-                    <span>@availPart.Availability</span>
-                }
-                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForAvail) && selectedPartCheckForAvail != null)
-                {
-                    <span class="text-muted">-</span>
-                }
-            </td>
-            <td>
-                @* VENDOR *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? vendorPart) && vendorPart != null && !string.IsNullOrEmpty(vendorPart.VendorName))
-                {
-                    @if(!string.IsNullOrEmpty(vendorPart.VendorProductUrl))
-                    {
-                        <a href="@vendorPart.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPart.VendorName</a>
-                    }
-                    else
-                    {
-                        <span>@vendorPart.VendorName</span>
-                    }
-                }
-                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForVendor) && selectedPartCheckForVendor != null)
-                {
-                    <span class="text-muted">-</span>
-                }
-            </td>
-            <td>
-                @* PRICE *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
-                {
-                    <strong>@pricedPart.BasePrice.Value.ToString("C")</strong>
-                }
-                else if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheckForPrice) && selectedPartCheckForPrice != null)
-                {
-                    <span class="text-muted">N/A</span>
-                }
-                else
-                {
-                     <span class="text-muted">-</span>
-                }
-            </td>
-            <td>
-                @* ACTIONS / BUY BUTTON *@
-                @if (currentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? existingPart) && existingPart != null)
-                {
-                    <div class="d-flex flex-column">
-                        @if (!string.IsNullOrEmpty(existingPart.VendorProductUrl))
-                        {
-                            <a href="@existingPart.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a>
-                        }
-                        <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(category.CategoryId)">Change</button>
-                        <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(category.CategoryId)">Clear</button>
-                    </div>
-                }
-                else
-                {
-                    <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(category.CategoryId)">+ Choose A @category.Name</button>
-                }
-            </td>
-        </tr>
+            </div>
+            @if (linkCopied)
+            {
+                <small class="text-success d-block mt-1">Link copied to clipboard!</small>
+            }
+        </div>
     }
-</tbody>
+
+    @* --- NO 3D PREVIEW CANVAS --- *@
+
+    <div class="table-responsive mt-3">
+        <table class="table engine-builder-table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 15%;">Component</th>
+                    <th style="width: 10%;">Image</th>
+                    <th style="width: 30%;">Selection</th>
+                    <th style="width: 10%;">Availability</th>
+                    <th style="width: 10%;">Vendor</th>
+                    <th style="width: 10%;">Price</th>
+                    <th style="width: 15%;">Actions / Buy</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in partCategories)
+                {
+                    <tr>
+                        <td><strong>@category.Name</strong></td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? imgPart) && imgPart != null && !string.IsNullOrEmpty(imgPart.ImagePath))
+                            {
+                                <img src="@imgPart.ImagePath" alt="@imgPart.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;"
+                                     onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" />
+                            }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPartCheck) && selectedPartCheck != null)
+                            {
+                                <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image available" style="max-width: 75px; max-height: 75px; object-fit: contain;" />
+                            }
+                        </td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? selectedPart) && selectedPart != null)
+                            {
+                                <a href="/partdetail/@selectedPart.PartId"><strong>@selectedPart.Name</strong></a>
+                                @if(!string.IsNullOrWhiteSpace(selectedPart.Brand))
+                                {
+                                    <br /><small class="text-muted">Brand: @selectedPart.Brand</small>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">No part selected</span>
+                            }
+                        </td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? availPart) && availPart != null && !string.IsNullOrEmpty(availPart.Availability))
+                            {
+                                <span>@availPart.Availability</span>
+                            }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(category.CategoryId) && BuildStateService.CurrentBuild.SelectedParts[category.CategoryId] != null)
+                            { <span class="text-muted">-</span> }
+                        </td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? vendorPart) && vendorPart != null && !string.IsNullOrEmpty(vendorPart.VendorName))
+                            {
+                                @if(!string.IsNullOrEmpty(vendorPart.VendorProductUrl))
+                                {
+                                    <a href="@vendorPart.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPart.VendorName</a>
+                                }
+                                else { <span>@vendorPart.VendorName</span> }
+                            }
+                             else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(category.CategoryId) && BuildStateService.CurrentBuild.SelectedParts[category.CategoryId] != null)
+                            { <span class="text-muted">-</span> }
+                        </td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
+                            {
+                                <strong>@pricedPart.BasePrice.Value.ToString("C")</strong>
+                            }
+                             else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(category.CategoryId) && BuildStateService.CurrentBuild.SelectedParts[category.CategoryId] != null)
+                            { <span class="text-muted">N/A</span> }
+                            else { <span class="text-muted">-</span> }
+                        </td>
+                        <td>
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(category.CategoryId, out Part? existingPart) && existingPart != null)
+                            {
+                                <div class="d-flex flex-column">
+                                    @if (!string.IsNullOrEmpty(existingPart.VendorProductUrl))
+                                    {
+                                        <a href="@existingPart.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a>
+                                    }
+                                    <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(category.CategoryId)">Change</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(category.CategoryId)">Clear</button>
+                                </div>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(category.CategoryId)">+ Choose A @category.Name</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
         </table>
     </div>
 }
 
-@* Styling (can be moved to a CSS file later) *@
 <style>
-    .engine-builder-table th, .engine-builder-table td {
-        vertical-align: middle;
-    }
-    .engine-builder-table td:nth-child(2) { /* Selection column */
-        min-width: 200px; /* Give some space for part names */
-    }
+    .engine-builder-table th, .engine-builder-table td { vertical-align: middle; }
 </style>
 
 @code {
-    private List<PartCategory>? partCategories;
-    private EngineBuildConfiguration currentBuild = new EngineBuildConfiguration();
+    [SupplyParameterFromQuery(Name = "build")]
+    public string? IncomingBuildConfigurationString { get; set; }
 
-    // Properties to receive selection data from query string
     [SupplyParameterFromQuery]
     public int? PassedCategoryId { get; set; }
 
     [SupplyParameterFromQuery]
     public int? PassedSelectedPartId { get; set; }
 
-    // Flag to ensure selection is processed only once per incoming query parameter set
-    private bool _selectionQueryProcessedThisNav = false;
+    private List<PartCategory>? partCategories;
+    private bool isLoading = true;
+    private bool _justProcessedQueryAndNavigated = false;
+    private string? shareableLink;
+    private bool linkCopied = false;
+    private bool processedAndWillNavigate = false;
+    // No 3D specific fields needed anymore:
+    // private string engineBuilderCanvasId = $"engine-builder-canvas-{Guid.NewGuid()}";
+    // private bool _engineBuilderSceneInitialized = false;
+    // private string? _currentLoadedModelPath; // No longer needed for this page if no 3D
 
     protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - Loading part categories.");
-        if (DbContext.PartCategories != null)
+        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - ENTERED.");
+        isLoading = true;
+        try
         {
-            partCategories = await DbContext.PartCategories.OrderBy(c => c.Name).ToListAsync();
+            if (DbContext.PartCategories != null)
+            {
+                partCategories = await DbContext.PartCategories.OrderBy(c => c.Name).ToListAsync();
+                Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - Loaded {partCategories?.Count ?? 0} categories.");
+            }
+            else
+            {
+                partCategories = new List<PartCategory>();
+                Console.WriteLine("EngineBuilderPage: OnInitializedAsync - DbContext.PartCategories DbSet is null.");
+            }
         }
-        else
+        catch (Exception ex)
         {
+            Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - EXCEPTION while loading categories: {ex.ToString()}");
             partCategories = new List<PartCategory>();
-            Console.WriteLine("EngineBuilderPage: PartCategories DbSet is null.");
         }
-        Console.WriteLine($"EngineBuilderPage: Loaded {partCategories?.Count ?? 0} categories.");
+        finally
+        {
+            isLoading = false;
+        }
+        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - EXITED.");
     }
 
-    protected override async Task OnParametersSetAsync()
+// Ensure these fields are declared in your @code block for EngineBuilderPage.razor:
+// @inject rotaryproject.Services.EngineBuildStateService BuildStateService;
+// @inject RotaryEngineDbContext DbContext;
+// @inject NavigationManager Navigation;
+// @inject IJSRuntime JSRuntime; // If still needed for clipboard or 3D later
+
+// [SupplyParameterFromQuery(Name = "build")]
+// public string? IncomingBuildConfigurationString { get; set; }
+// [SupplyParameterFromQuery]
+// public int? PassedCategoryId { get; set; }
+// [SupplyParameterFromQuery]
+// public int? PassedSelectedPartId { get; set; }
+
+// private bool _isProcessingParameters = false; // To prevent re-entrancy within this method if awaits cause it
+
+protected override async Task OnParametersSetAsync()
+{
+    // Log entry with current parameter values from the URL
+    Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - ENTERED. " +
+                      $"BuildString: '{IncomingBuildConfigurationString}', " +
+                      $"PassedCatId: {PassedCategoryId}, PassedSelPartId: {PassedSelectedPartId}");
+
+    // Check if this execution is due to our own navigation to clean the URL
+    // If the query parameters that trigger processing are now gone, we assume the state
+    // is already correctly in BuildStateService.CurrentBuild from a previous pass.
+    if (string.IsNullOrWhiteSpace(IncomingBuildConfigurationString) && !PassedSelectedPartId.HasValue)
     {
-        Console.WriteLine($"EngineBuilderPage: OnParametersSetAsync - ENTERED. PassedCategoryId: {PassedCategoryId}, PassedSelectedPartId: {PassedSelectedPartId}");
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - No new incoming build/selection parameters to process. UI will render from current BuildStateService state.");
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - EXITED (no action needed).");
+        // Ensure UI reflects the current state from the service, especially if it was just populated
+        // StateHasChanged(); // Might be needed if other parts of the page depend on this lifecycle running
+        return;
+    }
 
-        if (PassedSelectedPartId.HasValue && PassedCategoryId.HasValue)
+    // Flag to indicate if we processed parameters in this cycle and will navigate
+    bool processedAndWillNavigate = false;
+
+    // 1. Process incoming shared build configuration string (e.g., from ?build=1-101_2-205)
+    if (!string.IsNullOrWhiteSpace(IncomingBuildConfigurationString))
+    {
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Processing build string: {IncomingBuildConfigurationString}");
+        processedAndWillNavigate = true;
+        BuildStateService.CurrentBuild.SelectedParts.Clear(); // Reset for the new build from link
+
+        var categoryPartPairs = IncomingBuildConfigurationString.Split('_');
+        foreach (var pairString in categoryPartPairs)
         {
-            // Only process if this specific set of query parameters hasn't been processed yet
-            // This simple check might need refinement if user navigates back and forth with same params.
-            // A more robust way would be to compare with a previous state or use a GUID in the query.
-            // For now, we'll reset the flag when parameters are cleared.
-
-            // Let's re-evaluate how to process only once.
-            // The Navigation.NavigateTo below will cause this method to run again with null params.
-            // So, we just need to act if they are present.
-
-            Console.WriteLine($"EngineBuilderPage: Processing selection - CategoryID: {PassedCategoryId.Value}, PartID: {PassedSelectedPartId.Value}");
-
-            if (DbContext.Parts != null)
+            var ids = pairString.Split('-');
+            if (ids.Length == 2 && int.TryParse(ids[0], out int categoryId) && int.TryParse(ids[1], out int partIdVal))
             {
-                var part = await DbContext.Parts
-                                    .Include(p => p.Category) // Ensure p.Category casing matches Part.cs
-                                    .FirstOrDefaultAsync(p => p.PartId == PassedSelectedPartId.Value); // Ensure p.PartId casing matches Part.cs
-                
-                if (part != null)
+                Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Parsed from build string - CategoryId: {categoryId}, PartId: {partIdVal}");
+                if (DbContext.Parts != null)
                 {
-                    currentBuild.SelectPart(PassedCategoryId.Value, part); // Update the dictionary
-                    Console.WriteLine($"EngineBuilderPage: Part '{part.Name}' selected for category {PassedCategoryId.Value}. currentBuild.SelectedParts count: {currentBuild.SelectedParts.Count}");
-                    
-                    // Explicitly tell Blazor the state has changed and it needs to re-render
-                    StateHasChanged(); 
-                }
-                else
-                {
-                    Console.WriteLine($"EngineBuilderPage: Selected part with ID {PassedSelectedPartId.Value} not found in DB.");
+                    // Ensure PartId and CategoryId casing matches your Part.cs model in the LINQ query
+                    var part = await DbContext.Parts
+                                        .Include(p => p.Category)
+                                        .FirstOrDefaultAsync(p => p.PartId == partIdVal && p.CategoryId == categoryId);
+                    if (part != null)
+                    {
+                        BuildStateService.CurrentBuild.SelectPart(categoryId, part); // Update service state
+                        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Loaded Part '{part.Name}' (ID: {part.PartId}) for CategoryId {categoryId} from build string into service.");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): PartId {partIdVal} for CategoryId {categoryId} (build string) not found or category mismatch in DB.");
+                    }
                 }
             }
             else
             {
-                 Console.WriteLine("EngineBuilderPage: DbContext.Parts is null. Cannot fetch selected part.");
+                Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Could not parse pair string: '{pairString}' from build string.");
             }
-
-            // Navigate to clean URL to remove query parameters.
-            // This will trigger OnParametersSetAsync again, but PassedSelectedPartId/PassedCategoryId will be null.
-            Navigation.NavigateTo("/enginebuilder", replace: true); 
         }
-        Console.WriteLine($"EngineBuilderPage: OnParametersSetAsync - EXITED.");
+    }
+    // 2. Process incoming direct part selection (e.g., from PartSelectionPage)
+    // This runs if no build string was processed in this call.
+    else if (PassedSelectedPartId.HasValue && PassedCategoryId.HasValue)
+    {
+        processedAndWillNavigate = true;
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Processing direct selection - CategoryID: {PassedCategoryId.Value}, PartID: {PassedSelectedPartId.Value}");
+        if (DbContext.Parts != null)
+        {
+            var part = await DbContext.Parts
+                                .Include(p => p.Category)
+                                .FirstOrDefaultAsync(p => p.PartId == PassedSelectedPartId.Value);
+
+            if (part != null && part.CategoryId == PassedCategoryId.Value) // Ensure part belongs to the passed category
+            {
+                BuildStateService.CurrentBuild.SelectPart(PassedCategoryId.Value, part); // Update service state
+                Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Part '{part.Name}' (ID: {part.PartId}) selected for category {PassedCategoryId.Value} into service.");
+            }
+            else
+            {
+                Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Selected part with ID {PassedSelectedPartId.Value} not found or category mismatch for CategoryId {PassedCategoryId.Value}.");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): DbContext.Parts is null. Cannot fetch selected part.");
+        }
     }
 
-    private void SelectOrChangePart(int categoryId) // Ensure categoryId casing matches PartCategory.cs
+    if (processedAndWillNavigate)
+    {
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): Parameters processed. Updating UI. SelectedParts count in service: {BuildStateService.CurrentBuild.SelectedParts.Count}");
+        // StateHasChanged(); // Not calling StateHasChanged here because Navigation.NavigateTo will cause a re-render.
+                           // The UI will re-render using the updated BuildStateService.CurrentBuild.
+        
+        // await Update3DPreview(); // Call this if you re-add 3D and it needs to update based on service state
+
+        // Clean the URL by removing query parameters.
+        // The component will re-render based on the (now clean) URL and the persisted state in BuildStateService.
+        //Navigation.NavigateTo("/enginebuilder", replace: true);
+        // Note: OnParametersSetAsync will be called again due to this navigation.
+        // The first 'if' condition in this method will handle that re-entry gracefully.
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - EXITED (after processing query parameters and initiating URL clean navigation).");
+    }
+    else
+    {
+        // This path is taken on initial load without query parameters, or after the URL has been cleaned.
+        // The UI will render based on the current state in BuildStateService.CurrentBuild.
+        Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - EXITED (no new query parameters to process, UI will render from service state. SelectedParts count: {BuildStateService.CurrentBuild.SelectedParts.Count}).");
+    }
+}
+
+    // OnAfterRenderAsync is no longer strictly needed if its only purpose was 3D init.
+    // If you have other JS interop that needs to run after render, you might keep a simplified version.
+    // For now, we can remove it if 3D is gone.
+    // protected override async Task OnAfterRenderAsync(bool firstRender)
+    // {
+    //     Console.WriteLine($"EngineBuilderPage: OnAfterRenderAsync - SKIPPED (3D removed).");
+    // }
+
+    private void SelectOrChangePart(int categoryId)
     {
         Console.WriteLine($"EngineBuilderPage: Navigating to select part for CategoryID: {categoryId}");
         Navigation.NavigateTo($"/selectpart/{categoryId}");
     }
 
-    private void ClearPartSelection(int categoryId) // Ensure categoryId casing matches PartCategory.cs
+    private async Task ClearPartSelection(int categoryId)
     {
         Console.WriteLine($"EngineBuilderPage: Clearing part selection for CategoryID: {categoryId}");
-        currentBuild.SelectPart(categoryId, null); 
-        // StateHasChanged(); // Usually not needed if dictionary change is picked up by the @foreach
-                           // but add it if UI doesn't update after clearing.
+        BuildStateService.CurrentBuild.SelectPart(categoryId, null);
+        //StateHasChanged();
+        // await Update3DPreview(); // REMOVED CALL TO 3D UPDATE
     }
+
+    private void GenerateShareableLink()
+    {
+        linkCopied = false;
+        Console.WriteLine("EngineBuilderPage: GenerateShareableLink - Method ENTERED.");
+        if (BuildStateService.CurrentBuild.SelectedParts == null || !BuildStateService.CurrentBuild.SelectedParts.Any())
+        {
+            shareableLink = "Please select some parts first.";
+            Console.WriteLine("EngineBuilderPage: GenerateShareableLink - No parts selected.");
+            return;
+        }
+
+        var buildParts = BuildStateService.CurrentBuild.SelectedParts
+            .Where(kvp => kvp.Value != null)
+            .Select(kvp => $"{kvp.Key}-{kvp.Value!.PartId}");
+        string buildString = string.Join("_", buildParts);
+
+        if (string.IsNullOrEmpty(buildString)) { shareableLink = "Error creating build string."; Console.WriteLine("EngineBuilderPage: buildString empty."); return; }
+        var builderPageUri = Navigation.ToAbsoluteUri("/enginebuilder").ToString();
+        shareableLink = $"{builderPageUri}?build={buildString}";
+        Console.WriteLine($"EngineBuilderPage: GenerateShareableLink - FINAL link: {shareableLink}");
+    }
+
+    private async Task CopyLinkToClipboard()
+    {
+        if (!string.IsNullOrEmpty(shareableLink))
+        {
+            // Ensure your JS function is namespaced if you changed it, e.g., "blazorGui.clipboardCopy.copyText"
+            bool success = await JSRuntime.InvokeAsync<bool>("blazorGui.clipboardCopy.copyText", shareableLink);
+            linkCopied = success;
+            if (success) { 
+                Console.WriteLine("EngineBuilderPage: Link copied.");
+                _ = Task.Delay(2000).ContinueWith(_ => { InvokeAsync(() => { linkCopied = false; StateHasChanged(); }); });
+            } else { Console.WriteLine("EngineBuilderPage: Failed to copy link."); }
+        }
+    }
+
+    // Update3DPreview method is removed as 3D functionality is out.
+    // private async Task Update3DPreview() { ... }
+
+    // DisposeAsync is no longer strictly needed if its only purpose was 3D JS cleanup.
+    // If you remove IAsyncDisposable, remove this method too.
+    // public async ValueTask DisposeAsync() { ... }
 }
