@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using rotaryproject.Data.Models;
-
+using Microsoft.AspNetCore.Identity; // Add this for IdentityUser (if not using ApplicationUser directly)
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore; // Add this for IdentityDbContext
 namespace rotaryproject.Data;
 
-public partial class RotaryEngineDbContext : DbContext
+public partial class RotaryEngineDbContext : IdentityDbContext<ApplicationUser> // <<< MODIFIED HERE
 {
     public RotaryEngineDbContext()
     {
@@ -42,6 +43,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<CompatibilityRule>(entity =>
         {
             entity.HasKey(e => e.RuleId).HasName("PK__Compatib__110458C2D19B7CFD");

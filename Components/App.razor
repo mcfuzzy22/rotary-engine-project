@@ -1,28 +1,38 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Components.Authorization 
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Rotary Engine Builder</title> @* <<< ADD A TITLE *@
+    <title>Rotary Engine Builder</title>
     <base href="/" />
+    
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
-    <link rel="stylesheet" href="@Assets["rotaryproject.styles.css"]" />
+    <link rel="stylesheet" href="@Assets["rotaryproject.styles.css"]" /> 
+    
     <ImportMap />
+    
     <link rel="icon" type="image/png" href="favicon.png" />
-    <HeadOutlet />
+
+    
+    <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
 <body>
-    <Routes />
+    
+    <CascadingAuthenticationState>
+        <Routes @rendermode="InteractiveServer" /> 
+    </CascadingAuthenticationState>
+
     <script src="_framework/blazor.web.js"></script>
-    @* --- ADD BABYLON.JS SCRIPT HERE --- *@
+    
+    @* Babylon.js and your custom scripts - order is correct *@
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script> @* For loading formats like glTF/GLB *@
-    @* --- END BABYLON.JS SCRIPT --- *@
-    <script src="js/modelViewer.js"></script> @* <<< ADD THIS *@
-    <script src="js/site.js"></script> @* <<< ADD THIS *@
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="js/modelViewer.js"></script>
+    <script src="js/site.js"></script> @* For clipboard copy and other site-wide JS utilities *@
 </body>
 
 </html>
