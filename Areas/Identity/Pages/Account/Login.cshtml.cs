@@ -102,40 +102,55 @@ namespace rotaryproject.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
-        public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+        // In Areas/Identity/Pages/Account/Login.cshtml.cs
+
+public async Task<IActionResult> OnPostAsync(string? returnUrl = null) // Use nullable string for returnUrl
+{
+    // 1. Establish the return URL. Default to home page if null or empty.
+    string redirectUrl = returnUrl ?? Url.Content("~/");
+
+    // ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList(); // Keep if you use external logins
+
+    if (ModelState.IsValid)
+    {
+        var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+        if (result.Succeeded)
         {
-            returnUrl ??= Url.Content("~/");
+            _logger.LogInformation("User logged in.");
+            _logger.LogInformation($"Login successful. Will attempt to redirect. Original returnUrl query param was: '{returnUrl}'. Effective redirectUrl is: '{redirectUrl}'");
 
-            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-
-            if (ModelState.IsValid)
+            // 2. Check if the effective redirectUrl is local BEFORE attempting LocalRedirect
+            if (Url.IsLocalUrl(redirectUrl))
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
-                {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                    return Page();
-                }
+                _logger.LogInformation($"Redirecting to local URL: '{redirectUrl}'");
+                return LocalRedirect(redirectUrl);
             }
-
-            // If we got this far, something failed, redisplay form
+            else
+            {
+                // This case will be hit if redirectUrl (derived from returnUrl) is absolute
+                _logger.LogWarning($"Non-local redirectUrl '{redirectUrl}' detected. Redirecting to application root ('~/') as a safe default.");
+                return LocalRedirect("~/"); 
+            }
+        }
+        if (result.RequiresTwoFactor)
+        {
+            return RedirectToPage("./LoginWith2fa", new { ReturnUrl = redirectUrl, RememberMe = Input.RememberMe });
+        }
+        if (result.IsLockedOut)
+        {
+            _logger.LogWarning("User account locked out.");
+            return RedirectToPage("./Lockout");
+        }
+        else
+        {
+            // This handles other failure cases like incorrect password
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
         }
+    }
+
+    // If ModelState is invalid, redisplay form
+    return Page();
+}
     }
 }

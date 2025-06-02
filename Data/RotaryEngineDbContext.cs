@@ -24,7 +24,7 @@ public partial class RotaryEngineDbContext : IdentityDbContext<ApplicationUser> 
     public virtual DbSet<PartCategory> PartCategories { get; set; }
 
     public virtual DbSet<PartStat> PartStats { get; set; }
-
+    public virtual DbSet<UserSavedBuild> UserSavedBuilds { get; set; }
    // In your RotaryEngineDbContext.cs
 
 protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -79,7 +79,22 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
             entity.HasOne(d => d.Part).WithMany(p => p.PartStats).HasConstraintName("FK__PartStats__PartI__3E52440B");
         });
+        modelBuilder.Entity<UserSavedBuild>(entity =>
+            {
+                entity.HasKey(e => e.UserSavedBuildId);
 
+                entity.Property(e => e.BuildName).IsRequired().HasMaxLength(100);
+                entity.Property(e => e.BuildConfigurationString).IsRequired(); // Can be long, so no MaxLength by default
+                entity.Property(e => e.UserId).IsRequired();
+
+                // Define the relationship to ApplicationUser
+                // An ApplicationUser can have many UserSavedBuilds
+                // A UserSavedBuild belongs to one ApplicationUser
+                entity.HasOne(d => d.User)
+                      .WithMany(p => p.SavedBuilds) // Corresponds to ICollection in ApplicationUser
+                      .HasForeignKey(d => d.UserId)
+                      .OnDelete(DeleteBehavior.Cascade); // Or DeleteBehavior.ClientSetNull if you prefer
+            });
         OnModelCreatingPartial(modelBuilder);
     }
 

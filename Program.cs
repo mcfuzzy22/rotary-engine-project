@@ -46,6 +46,7 @@ builder.Services.AddRazorComponents()
 
 // 5. Your custom services (you already have this)
 builder.Services.AddScoped<rotaryproject.Services.EngineBuildStateService>();
+builder.Services.AddCascadingAuthenticationState();
 
 // 6. Add services for Razor Pages (needed for the default Identity UI which uses Razor Pages)
 builder.Services.AddRazorPages();

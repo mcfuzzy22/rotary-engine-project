@@ -1,14 +1,14 @@
-// In Components/Layout/LoginDisplay.razor
+
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Routing
-@using Microsoft.AspNetCore.Identity // For SignInManager, UserManager if needed directly
+@using Microsoft.AspNetCore.Identity
 @inject NavigationManager Navigation
 <CascadingAuthenticationState>
 <AuthorizeView>
     <Authorized>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="Account/Manage" Match="NavLinkMatch.All">
-                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span> Hello @context.User.Identity?.Name!
+                <span class="bi bi-person-fill-nav-menu" aria-hidden="true"></span>  @context.User.Identity?.Name
             </NavLink>
         </div>
         <div class="nav-item px-3">
@@ -21,6 +21,11 @@
                 </button>
             </form>
         </div>
+        <div class="nav-item px-3">
+    <NavLink class="nav-link" href="my-saved-builds">
+        <span class="bi bi-archive-fill-nav-menu" aria-hidden="true"></span> My Saved Builds
+    </NavLink>
+    </div>
     </Authorized>
     <NotAuthorized>
         <div class="nav-item px-3">
@@ -33,6 +38,11 @@
                 <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Log in
             </NavLink>
         </div>
+        <div class="nav-item px-3">
+    <NavLink class="nav-link" href="my-saved-builds">
+        <span class="bi bi-archive-fill-nav-menu" aria-hidden="true"></span> My Saved Builds
+    </NavLink>
+</div>
     </NotAuthorized>
 </AuthorizeView>
 </CascadingAuthenticationState>

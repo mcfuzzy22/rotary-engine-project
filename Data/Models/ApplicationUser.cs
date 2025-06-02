@@ -8,5 +8,6 @@ namespace rotaryproject.Data.Models // Ensure this namespace is correct
         // You can add custom properties here later, for example:
         // public string? FirstName { get; set; }
         // public string? LastName { get; set; }
+        public virtual ICollection<UserSavedBuild> SavedBuilds { get; set; } = new List<UserSavedBuild>();
     }
 }

@@ -7,6 +7,9 @@
 @using Microsoft.EntityFrameworkCore
 @using System.Linq.Expressions 
 @using rotaryproject.Data
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Identity
 <PageTitle>Choose @(currentCategory?.Name ?? "Part")</PageTitle>
 
 @if (isLoading)
