@@ -32,7 +32,7 @@ else
         <td>
             <a href="/partdetail/@part.PartId">@part.Name</a> @* <<< MODIFIED: Make name a link *@
         </td>
-        <td>@(part.Category?.Name ?? "N/A")</td>
+        <td>@(part.SubCategory?.Name ?? "N/A")</td>
         <td>@part.Description</td>
         <td>@part.ModelPath</td>
     </tr>
@@ -50,10 +50,12 @@ else
         {
             if (DbContext.Parts != null)
             {
-                parts = await DbContext.Parts
-                                    .Include(p => p.Category) // Eager load the Category
-                                    .OrderBy(p => p.Name)
-                                    .ToListAsync();
+                // In OnInitializedAsync of PartsListPage.razor
+parts = await DbContext.Parts
+                    .Include(p => p.SubCategory)         // Include SubCategory
+                        .ThenInclude(sc => sc!.MainCategory) // Then include MainCategory from SubCategory
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
             }
             else
             {

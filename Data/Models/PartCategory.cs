@@ -19,6 +19,6 @@ public partial class PartCategory
     [StringLength(255)]
     public string? Description { get; set; }
 
-    [InverseProperty("Category")]
-    public virtual ICollection<Part> Parts { get; set; } = new List<Part>();
+    //[InverseProperty("Category")]
+    //public virtual ICollection<Part> Parts { get; set; } = new List<Part>();
 }

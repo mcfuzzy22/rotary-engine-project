@@ -12,8 +12,8 @@ using rotaryproject.Data;
 namespace rotaryproject.Migrations
 {
     [DbContext(typeof(RotaryEngineDbContext))]
-    [Migration("20250531194213_AddUserSavedBuildsTable")]
-    partial class AddUserSavedBuildsTable
+    [Migration("20250604193903_CreateInitialSchemaV2")]
+    partial class CreateInitialSchemaV2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -266,6 +266,159 @@ namespace rotaryproject.Migrations
                     b.ToTable("CompatibilityRules");
                 });
 
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineMainCategory", b =>
+                {
+                    b.Property<int>("EngineMainCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineMainCategoryId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("EngineMainCategoryId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("EngineMainCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.Property<int>("EngineSubCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineSubCategoryId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EngineMainCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("EngineSubCategoryId");
+
+                    b.HasIndex("EngineMainCategoryId");
+
+                    b.ToTable("EngineSubCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumCategory", b =>
+                {
+                    b.Property<int>("ForumCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ForumCategoryId"));
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("ForumCategoryId");
+
+                    b.ToTable("ForumCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumPost", b =>
+                {
+                    b.Property<int>("PostId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostId"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ModifiedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ThreadId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("PostId");
+
+                    b.HasIndex("ThreadId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ForumPosts");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumThread", b =>
+                {
+                    b.Property<int>("ThreadId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ThreadId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ForumCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastPostAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("ThreadId");
+
+                    b.HasIndex("ForumCategoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ForumThreads");
+                });
+
             modelBuilder.Entity("rotaryproject.Data.Models.Part", b =>
                 {
                     b.Property<int>("PartId")
@@ -285,15 +438,15 @@ namespace rotaryproject.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EngineCompatibility")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EngineSubCategoryId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ImagePath")
                         .HasMaxLength(255)
@@ -344,10 +497,9 @@ namespace rotaryproject.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
-                    b.HasKey("PartId")
-                        .HasName("PK__Parts__7C3F0D3095AB3286");
+                    b.HasKey("PartId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("EngineSubCategoryId");
 
                     b.ToTable("Parts");
                 });
@@ -518,15 +670,64 @@ namespace rotaryproject.Migrations
                     b.Navigation("PartB");
                 });
 
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.HasOne("rotaryproject.Data.Models.EngineMainCategory", "MainCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("EngineMainCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("MainCategory");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumPost", b =>
+                {
+                    b.HasOne("rotaryproject.Data.Models.ForumThread", "Thread")
+                        .WithMany("Posts")
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("rotaryproject.Data.Models.ApplicationUser", "User")
+                        .WithMany("ForumPosts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Thread");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumThread", b =>
+                {
+                    b.HasOne("rotaryproject.Data.Models.ForumCategory", "ForumCategory")
+                        .WithMany("Threads")
+                        .HasForeignKey("ForumCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("rotaryproject.Data.Models.ApplicationUser", "User")
+                        .WithMany("ForumThreads")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ForumCategory");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("rotaryproject.Data.Models.Part", b =>
                 {
-                    b.HasOne("rotaryproject.Data.Models.PartCategory", "Category")
+                    b.HasOne("rotaryproject.Data.Models.EngineSubCategory", "SubCategory")
                         .WithMany("Parts")
-                        .HasForeignKey("CategoryId")
-                        .IsRequired()
-                        .HasConstraintName("FK__Parts__CategoryI__3B75D760");
+                        .HasForeignKey("EngineSubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("SubCategory");
                 });
 
             modelBuilder.Entity("rotaryproject.Data.Models.PartStat", b =>
@@ -554,7 +755,31 @@ namespace rotaryproject.Migrations
 
             modelBuilder.Entity("rotaryproject.Data.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("ForumPosts");
+
+                    b.Navigation("ForumThreads");
+
                     b.Navigation("SavedBuilds");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineMainCategory", b =>
+                {
+                    b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.Navigation("Parts");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumCategory", b =>
+                {
+                    b.Navigation("Threads");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.ForumThread", b =>
+                {
+                    b.Navigation("Posts");
                 });
 
             modelBuilder.Entity("rotaryproject.Data.Models.Part", b =>
@@ -564,11 +789,6 @@ namespace rotaryproject.Migrations
                     b.Navigation("CompatibilityRulePartBs");
 
                     b.Navigation("PartStats");
-                });
-
-            modelBuilder.Entity("rotaryproject.Data.Models.PartCategory", b =>
-                {
-                    b.Navigation("Parts");
                 });
 #pragma warning restore 612, 618
         }

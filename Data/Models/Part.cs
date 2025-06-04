@@ -6,11 +6,13 @@ namespace rotaryproject.Data.Models
     public class Part
     {
         [Key]
+        //[Column("PartID")]
         public int PartId { get; set; } // Ensure casing matches your DB/usage
 
+        //[Required]
+        //public int CategoryId { get; set; } // Ensure casing matches your DB/usage
         [Required]
-        public int CategoryId { get; set; } // Ensure casing matches your DB/usage
-
+        public int EngineSubCategoryId { get; set; }
         [Required]
         [StringLength(150)]
         public string Name { get; set; } = string.Empty;
@@ -62,8 +64,10 @@ namespace rotaryproject.Data.Models
 
 
         // Navigation property back to the category
-        [ForeignKey("CategoryId")]
-        public virtual PartCategory? Category { get; set; }
+        //[ForeignKey("CategoryId")]
+        //public virtual PartCategory? Category { get; set; }
+        [ForeignKey("EngineSubCategoryId")]
+        public virtual EngineSubCategory? SubCategory { get; set; }
 
         // Navigation property to PartStats (if you use this for some attributes)
         public virtual ICollection<PartStat> PartStats { get; set; } = new List<PartStat>();

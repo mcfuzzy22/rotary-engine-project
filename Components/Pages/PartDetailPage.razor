@@ -29,10 +29,17 @@ else if (part != null)
     <div class="container mt-3"> @* Added a container for better spacing/layout *@
         
         @* 1. CATEGORY NAME *@
-        @if (part.Category != null)
-        {
-            <h5 class="text-muted mb-2">Category: @part.Category.Name</h5>
-        }
+        @if (part.SubCategory != null)
+    {
+        <dt class="col-sm-3">Category</dt>
+        <dd class="col-sm-9">
+            @if (part.SubCategory.MainCategory != null)
+            {
+                @part.SubCategory.MainCategory.Name <span class="text-muted">&raquo;</span> 
+            }
+            @part.SubCategory.Name
+        </dd>
+    }
         else
         {
             <h5 class="text-muted mb-2">Category: N/A</h5>
@@ -152,9 +159,10 @@ else
         {
             if (DbContext.Parts != null && PartId > 0)
             {
-                loadedPart = await DbContext.Parts
-                                    .Include(p => p.Category)
-                                    .FirstOrDefaultAsync(p => p.PartId == PartId); // Ensure p.PartId matches your Part.cs
+                part = await DbContext.Parts
+                                .Include(p => p.SubCategory)         // <<< INCLUDE SubCategory
+                                    .ThenInclude(sc => sc!.MainCategory) // <<< THEN INCLUDE MainCategory from SubCategory
+                                .FirstOrDefaultAsync(p => p.PartId == PartId); // Ensure p.PartId casing matches Part.cs
 
                 if (loadedPart == null)
                 {

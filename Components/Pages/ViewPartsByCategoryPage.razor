@@ -71,10 +71,13 @@ else // currentCategory is null, and not loading (meaning CategoryId was invalid
                 if (currentCategory != null)
                 {
                     // Ensure p.CategoryId casing matches your Part.cs model
+                    // In OnParametersSetAsync of ViewPartsByCategoryPage.razor
                     partsForCategory = await DbContext.Parts
-                                                .Where(p => p.CategoryId == CategoryId) 
-                                                .OrderBy(p => p.Name)
-                                                .ToListAsync();
+                            .Where(p => p.EngineSubCategoryId == CategoryId)  // Use EngineSubCategoryId
+                            .Include(p => p.SubCategory) // Include the SubCategory
+                                .ThenInclude(sc => sc!.MainCategory) // Then include its MainCategory
+                            .OrderBy(p => p.Name)
+                            .ToListAsync();
                     Console.WriteLine($"ViewPartsByCategoryPage: Found {partsForCategory?.Count ?? 0} parts for category '{currentCategory.Name}'.");
                 }
                 else

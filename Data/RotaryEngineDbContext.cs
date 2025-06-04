@@ -22,7 +22,8 @@ public partial class RotaryEngineDbContext : IdentityDbContext<ApplicationUser> 
     public virtual DbSet<CompatibilityRule> CompatibilityRules { get; set; }
 
     public virtual DbSet<Part> Parts { get; set; }
-
+    public virtual DbSet<EngineMainCategory> EngineMainCategories { get; set; } // <<< ADD THIS
+    public virtual DbSet<EngineSubCategory> EngineSubCategories { get; set; }
     public virtual DbSet<PartCategory> PartCategories { get; set; }
 
     public virtual DbSet<PartStat> PartStats { get; set; }
@@ -63,11 +64,16 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 
         modelBuilder.Entity<Part>(entity =>
         {
-            entity.HasKey(e => e.PartId).HasName("PK__Parts__7C3F0D3095AB3286");
+            //entity.HasKey(e => e.PartId).HasName("PK__Parts__7C3F0D3095AB3286");
 
-            entity.HasOne(d => d.Category).WithMany(p => p.Parts)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Parts__CategoryI__3B75D760");
+            //entity.HasOne(/d => d.Category).WithMany(p => p.Parts)
+            //.OnDelete(DeleteBehavior.ClientSetNull)
+            //.HasConstraintName("FK__Parts__CategoryI__3B75D760");
+            entity.HasKey(e => e.PartId);
+            entity.HasOne(d => d.SubCategory) // Using the navigation property name in Part.cs
+                  .WithMany(p => p.Parts)       // Using the ICollection<Part> in EngineSubCategory.cs
+                  .HasForeignKey(d => d.EngineSubCategoryId) // The FK property in Part.cs
+                  .OnDelete(DeleteBehavior.Restrict);     
         });
 
         modelBuilder.Entity<PartCategory>(entity =>
@@ -97,6 +103,30 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                       .HasForeignKey(d => d.UserId)
                       .OnDelete(DeleteBehavior.Cascade); // Or DeleteBehavior.ClientSetNull if you prefer
             });
+            modelBuilder.Entity<EngineMainCategory>(entity =>
+        {
+            entity.HasKey(e => e.EngineMainCategoryId);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.HasIndex(e => e.Name).IsUnique(); // Main category names should be unique
+        });
+
+        // Configuration for EngineSubCategory
+        modelBuilder.Entity<EngineSubCategory>(entity =>
+        {
+            entity.HasKey(e => e.EngineSubCategoryId);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+
+            // Relationship: SubCategory to MainCategory
+            entity.HasOne(d => d.MainCategory)
+                  .WithMany(p => p.SubCategories)
+                  .HasForeignKey(d => d.EngineMainCategoryId)
+                  .OnDelete(DeleteBehavior.Cascade); // If a main category is deleted, its subcategories are deleted
+            entity.HasMany(e => e.ChildSubCategories)       // An EngineSubCategory has many ChildSubCategories
+          .WithOne(e => e.ParentSubCategory)        // Each ChildSubCategory has one ParentSubCategory
+          .HasForeignKey(e => e.ParentEngineSubCategoryId) // Using ParentEngineSubCategoryId as the FK
+          .OnDelete(DeleteBehavior.Restrict); // Or .ClientSetNull or .NoAction, avoid Cascade for self-ref on SQL Server if possible to prevent cycles, or handle carefully.
+                                     
+        });
             modelBuilder.Entity<ForumCategory>(entity =>
         {
             entity.HasKey(e => e.ForumCategoryId);

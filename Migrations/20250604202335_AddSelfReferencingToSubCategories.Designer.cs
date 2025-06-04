@@ -12,8 +12,8 @@ using rotaryproject.Data;
 namespace rotaryproject.Migrations
 {
     [DbContext(typeof(RotaryEngineDbContext))]
-    [Migration("20250604023106_AddForumTables")]
-    partial class AddForumTables
+    [Migration("20250604202335_AddSelfReferencingToSubCategories")]
+    partial class AddSelfReferencingToSubCategories
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -266,6 +266,61 @@ namespace rotaryproject.Migrations
                     b.ToTable("CompatibilityRules");
                 });
 
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineMainCategory", b =>
+                {
+                    b.Property<int>("EngineMainCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineMainCategoryId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("EngineMainCategoryId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("EngineMainCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.Property<int>("EngineSubCategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineSubCategoryId"));
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EngineMainCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("ParentEngineSubCategoryId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EngineSubCategoryId");
+
+                    b.HasIndex("EngineMainCategoryId");
+
+                    b.HasIndex("ParentEngineSubCategoryId");
+
+                    b.ToTable("EngineSubCategories");
+                });
+
             modelBuilder.Entity("rotaryproject.Data.Models.ForumCategory", b =>
                 {
                     b.Property<int>("ForumCategoryId")
@@ -388,15 +443,15 @@ namespace rotaryproject.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("EngineCompatibility")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EngineSubCategoryId")
+                        .HasColumnType("int");
 
                     b.Property<string>("ImagePath")
                         .HasMaxLength(255)
@@ -447,10 +502,9 @@ namespace rotaryproject.Migrations
                         .HasMaxLength(512)
                         .HasColumnType("nvarchar(512)");
 
-                    b.HasKey("PartId")
-                        .HasName("PK__Parts__7C3F0D3095AB3286");
+                    b.HasKey("PartId");
 
-                    b.HasIndex("CategoryId");
+                    b.HasIndex("EngineSubCategoryId");
 
                     b.ToTable("Parts");
                 });
@@ -621,6 +675,24 @@ namespace rotaryproject.Migrations
                     b.Navigation("PartB");
                 });
 
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.HasOne("rotaryproject.Data.Models.EngineMainCategory", "MainCategory")
+                        .WithMany("SubCategories")
+                        .HasForeignKey("EngineMainCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("rotaryproject.Data.Models.EngineSubCategory", "ParentSubCategory")
+                        .WithMany("ChildSubCategories")
+                        .HasForeignKey("ParentEngineSubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("MainCategory");
+
+                    b.Navigation("ParentSubCategory");
+                });
+
             modelBuilder.Entity("rotaryproject.Data.Models.ForumPost", b =>
                 {
                     b.HasOne("rotaryproject.Data.Models.ForumThread", "Thread")
@@ -661,13 +733,13 @@ namespace rotaryproject.Migrations
 
             modelBuilder.Entity("rotaryproject.Data.Models.Part", b =>
                 {
-                    b.HasOne("rotaryproject.Data.Models.PartCategory", "Category")
+                    b.HasOne("rotaryproject.Data.Models.EngineSubCategory", "SubCategory")
                         .WithMany("Parts")
-                        .HasForeignKey("CategoryId")
-                        .IsRequired()
-                        .HasConstraintName("FK__Parts__CategoryI__3B75D760");
+                        .HasForeignKey("EngineSubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
-                    b.Navigation("Category");
+                    b.Navigation("SubCategory");
                 });
 
             modelBuilder.Entity("rotaryproject.Data.Models.PartStat", b =>
@@ -702,6 +774,18 @@ namespace rotaryproject.Migrations
                     b.Navigation("SavedBuilds");
                 });
 
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineMainCategory", b =>
+                {
+                    b.Navigation("SubCategories");
+                });
+
+            modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
+                {
+                    b.Navigation("ChildSubCategories");
+
+                    b.Navigation("Parts");
+                });
+
             modelBuilder.Entity("rotaryproject.Data.Models.ForumCategory", b =>
                 {
                     b.Navigation("Threads");
@@ -719,11 +803,6 @@ namespace rotaryproject.Migrations
                     b.Navigation("CompatibilityRulePartBs");
 
                     b.Navigation("PartStats");
-                });
-
-            modelBuilder.Entity("rotaryproject.Data.Models.PartCategory", b =>
-                {
-                    b.Navigation("Parts");
                 });
 #pragma warning restore 612, 618
         }
