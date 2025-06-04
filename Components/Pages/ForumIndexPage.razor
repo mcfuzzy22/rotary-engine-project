@@ -1,0 +1,80 @@
+@page "/forums"
+@rendermode InteractiveServer // Or your project's default interactive mode
+
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@using rotaryproject.Data.Models // Your namespace for ForumCategory
+@using Microsoft.EntityFrameworkCore
+@using rotaryproject.Data
+<PageTitle>Forums</PageTitle>
+
+<h1>Rotary Engine Forums</h1>
+
+@* TODO: Add a "Create New Thread" button here later that might let you pick a category first, or place it on category pages *@
+
+@if (isLoading)
+{
+    <p><em>Loading forum categories...</em></p>
+}
+else if (forumCategories == null || !forumCategories.Any())
+{
+    <p><em>No forum categories have been created yet.</em></p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var category in forumCategories)
+        {
+            <a href="@($"forums/category/{category.ForumCategoryId}")" class="list-group-item list-group-item-action flex-column align-items-start mb-2 shadow-sm">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">@category.Name</h5>
+                    @* Optional: Display thread/post counts later *@
+                    @* <small>Threads: @category.Threads.Count</small> *@
+                </div>
+                @if (!string.IsNullOrWhiteSpace(category.Description))
+                {
+                    <p class="mb-1 text-muted">@category.Description</p>
+                }
+                @* Optional: Display last post info here later *@
+            </a>
+        }
+    </div>
+}
+
+@code {
+    private List<ForumCategory>? forumCategories;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("ForumIndexPage: OnInitializedAsync - Loading forum categories.");
+        isLoading = true;
+        try
+        {
+            if (DbContext.ForumCategories != null)
+            {
+                // Include Threads if you want to display thread counts directly
+                // For now, just loading categories. Order by DisplayOrder then Name.
+                forumCategories = await DbContext.ForumCategories
+                                            .OrderBy(fc => fc.DisplayOrder)
+                                            .ThenBy(fc => fc.Name)
+                                            .ToListAsync();
+                Console.WriteLine($"ForumIndexPage: Loaded {forumCategories.Count} forum categories.");
+            }
+            else
+            {
+                forumCategories = new List<ForumCategory>();
+                Console.WriteLine("ForumIndexPage: ForumCategories DbSet is null.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ForumIndexPage: EXCEPTION while loading forum categories: {ex.ToString()}");
+            forumCategories = new List<ForumCategory>(); // Ensure not null on error
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

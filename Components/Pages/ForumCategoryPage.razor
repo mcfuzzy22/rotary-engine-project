@@ -1,0 +1,152 @@
+@page "/forums/category/{CategoryId:int}"
+@rendermode InteractiveServer
+
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@using rotaryproject.Data.Models
+@using Microsoft.EntityFrameworkCore
+@using rotaryproject.Data
+@if (isLoading)
+{
+    <p><em>Loading threads...</em></p>
+}
+else if (currentCategory == null)
+{
+    <PageTitle>Category Not Found</PageTitle>
+    <h1>Category Not Found</h1>
+    <p><em>The category you are looking for (ID: @CategoryId) does not exist.</em></p>
+    <button class="btn btn-primary" @onclick="GoToForumIndex">Back to Forums</button>
+}
+else
+{
+    <PageTitle>@currentCategory.Name - Forums</PageTitle>
+    <h1>@currentCategory.Name</h1>
+    <p>@currentCategory.Description</p>
+    <hr />
+
+    <div class="mb-3">
+        <button class="btn btn-success" @onclick="NavigateToCreateThread">Create New Thread</button>
+    </div>
+
+    @if (threadsInThisCategory == null || !threadsInThisCategory.Any())
+    {
+        <p><em>No threads found in this category yet. Why not start one?</em></p>
+    }
+    else
+    {
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Thread / Started By</th>
+                    <th class="text-center">Replies</th>
+                    <th class="text-center">Views</th>
+                    <th>Last Post</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var thread in threadsInThisCategory)
+                {
+                    <tr>
+                        <td>
+                            <a href="@($"forums/thread/{thread.ThreadId}")"><strong>@thread.Title</strong></a>
+                            <br />
+                            <small class="text-muted">by @(thread.User?.UserName ?? "Unknown User") on @thread.CreatedAt.ToShortDateString()</small>
+                        </td>
+                        <td class="text-center">@(thread.Posts.Count > 0 ? thread.Posts.Count -1 : 0)</td> @* Assuming first post is part of thread, not a reply itself yet *@
+                        <td class="text-center">@thread.ViewCount</td>
+                        <td>
+                            @if (thread.Posts.Any())
+                            {
+                                var lastPost = thread.Posts.OrderByDescending(p => p.CreatedAt).FirstOrDefault();
+                                if (lastPost != null)
+                                {
+                                    <small>
+                                        by @(lastPost.User?.UserName ?? "Unknown")
+                                        <br />
+                                        @lastPost.CreatedAt.ToString("g")
+                                    </small>
+                                }
+                                else { <text>-</text> }
+                            }
+                            else
+                            {
+                                <small>
+                                    No posts yet <br/>
+                                    @thread.CreatedAt.ToString("g")
+                                </small>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        @* TODO: Add Pagination for threads later *@
+    }
+}
+
+@code {
+    [Parameter]
+    public int CategoryId { get; set; }
+
+    private ForumCategory? currentCategory;
+    private List<ForumThread>? threadsInThisCategory;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($"ForumCategoryPage: OnParametersSetAsync - Loading category and threads for CategoryId {CategoryId}");
+        isLoading = true;
+        try
+        {
+            if (DbContext.ForumCategories != null && DbContext.ForumThreads != null && CategoryId > 0)
+            {
+                currentCategory = await DbContext.ForumCategories.FindAsync(CategoryId);
+
+                if (currentCategory != null)
+                {
+                    // Load threads for this category, including the User who started it and Posts for reply count/last post
+                    threadsInThisCategory = await DbContext.ForumThreads
+                        .Where(t => t.ForumCategoryId == CategoryId)
+                        .Include(t => t.User) // To get thread starter's UserName
+                        .Include(t => t.Posts) // To get Posts for reply count and last post info
+                            .ThenInclude(p => p.User) // To get UserName for the last post
+                        .OrderByDescending(t => t.IsPinned) // Pinned threads first
+                        .ThenByDescending(t => t.LastPostAt) // Then by most recent activity
+                        .ToListAsync();
+                    Console.WriteLine($"ForumCategoryPage: Loaded {threadsInThisCategory.Count} threads for category '{currentCategory.Name}'.");
+                }
+                else
+                {
+                    Console.WriteLine($"ForumCategoryPage: Category with ID {CategoryId} not found.");
+                    threadsInThisCategory = new List<ForumThread>();
+                }
+            }
+            else { /* ... handle invalid CategoryId or DbContext ... */ InitializeEmpty(); }
+        }
+        catch (Exception ex) { Console.WriteLine($"ForumCategoryPage: EXCEPTION: {ex.ToString()}"); InitializeEmpty(); }
+        finally { isLoading = false; }
+    }
+
+    private void InitializeEmpty()
+    {
+        threadsInThisCategory = new List<ForumThread>();
+        currentCategory = null;
+    }
+
+    private void GoToForumIndex()
+    {
+        Navigation.NavigateTo("/forums");
+    }
+
+    private void NavigateToCreateThread()
+    {
+        // TODO: This will navigate to a new page/component to create a thread in this category
+        // For Phase 2, e.g., Navigation.NavigateTo($"/forums/createthread/{CategoryId}");
+        Console.WriteLine($"ForumCategoryPage: 'Create New Thread' clicked for CategoryId {CategoryId}. (Functionality to be implemented)");
+        // For now, you could show an alert or just log.
+        JSRuntime.InvokeVoidAsync("alert", "Create new thread functionality will be added in the next phase!");
+    }
+
+    // Need to inject IJSRuntime for the alert above
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+}

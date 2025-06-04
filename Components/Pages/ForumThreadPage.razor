@@ -1,0 +1,148 @@
+@page "/forums/thread/{ThreadId:int}"
+@rendermode InteractiveServer
+
+@inject RotaryEngineDbContext DbContext
+@inject NavigationManager Navigation
+@using rotaryproject.Data.Models
+@using Microsoft.EntityFrameworkCore
+@using rotaryproject.Data
+@if (isLoading)
+{
+    <p><em>Loading thread and posts...</em></p>
+}
+else if (currentThread == null)
+{
+    <PageTitle>Thread Not Found</PageTitle>
+    <h1>Thread Not Found</h1>
+    <p><em>The thread you are looking for (ID: @ThreadId) does not exist.</em></p>
+    <button class="btn btn-primary" @onclick="GoToForumIndex">Back to Forums</button>
+}
+else
+{
+    <PageTitle>@currentThread.Title</PageTitle>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/forums">Forums</a></li>
+            @if (currentThread.ForumCategory != null)
+            {
+                <li class="breadcrumb-item"><a href="@($"forums/category/{currentThread.ForumCategoryId}")">@currentThread.ForumCategory.Name</a></li>
+            }
+            <li class="breadcrumb-item active" aria-current="page">@currentThread.Title</li>
+        </ol>
+    </nav>
+
+    <h1>@currentThread.Title</h1>
+    <hr />
+
+    @if (currentThread.Posts == null || !currentThread.Posts.Any())
+    {
+        <p><em>This thread has no posts yet.</em></p>
+    }
+    else
+    {
+        foreach (var post in currentThread.Posts.OrderBy(p => p.CreatedAt)) // Order posts by creation time
+        {
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header bg-light small text-muted">
+                    Posted by: <strong>@(post.User?.UserName ?? "Unknown User")</strong> on @post.CreatedAt.ToString("f")
+                    @if (post.ModifiedAt.HasValue)
+                    {
+                        <span class="ms-2 fst-italic">(Last edited: @post.ModifiedAt.Value.ToString("f"))</span>
+                    }
+                </div>
+                <div class="card-body">
+                    @* For security, if Content can contain HTML, it should be sanitized or rendered carefully.
+                       For now, assuming plain text or Markdown that you might process later.
+                       Using a pre-wrap style helps preserve formatting like line breaks. *@
+                    <div style="white-space: pre-wrap;">@post.Content</div>
+                </div>
+                @* TODO: Add Reply/Quote/Edit/Delete buttons here later for authenticated users with permissions *@
+            </div>
+        }
+        @* TODO: Add Pagination for posts later *@
+    }
+
+    <hr />
+    @* TODO: Add "Post a Reply" form/button here for Phase 2 (requires login) *@
+    <div class="mt-3">
+         <button class="btn btn-success" @onclick="NavigateToPostReply">Post a Reply</button>
+    </div>
+}
+
+<div class="mt-4">
+    @if (currentThread?.ForumCategory != null)
+    {
+        <button class="btn btn-outline-secondary me-2" @onclick="() => GoToCategory(currentThread.ForumCategoryId)">
+            <span class="oi oi-arrow-left" aria-hidden="true"></span> Back to @currentThread.ForumCategory.Name
+        </button>
+    }
+    <button class="btn btn-outline-secondary" @onclick="GoToForumIndex">
+        <span class="oi oi-home" aria-hidden="true"></span> Back to Forum Index
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public int ThreadId { get; set; }
+
+    private ForumThread? currentThread;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        Console.WriteLine($"ForumThreadPage: OnParametersSetAsync - Loading thread and posts for ThreadId {ThreadId}");
+        isLoading = true;
+        try
+        {
+            if (DbContext.ForumThreads != null && ThreadId > 0)
+            {
+                // Load the thread, its category (for breadcrumbs), and all its posts, including the user for each post
+                currentThread = await DbContext.ForumThreads
+                    .Include(t => t.ForumCategory) // For breadcrumb
+                    .Include(t => t.User)          // For thread starter info if needed (already on thread object)
+                    .Include(t => t.Posts)         // Eager load all posts for this thread
+                        .ThenInclude(p => p.User)  // For each post, include the User who wrote it
+                    .FirstOrDefaultAsync(t => t.ThreadId == ThreadId);
+
+                if (currentThread != null)
+                {
+                    Console.WriteLine($"ForumThreadPage: Loaded thread '{currentThread.Title}' with {currentThread.Posts.Count} posts.");
+                    // TODO: Increment ViewCount here (be careful about doing this on every parameter set or multiple times for same view)
+                    // currentThread.ViewCount++;
+                    // await DbContext.SaveChangesAsync(); // Might do this in a separate, more controlled way
+                }
+                else
+                {
+                    Console.WriteLine($"ForumThreadPage: Thread with ID {ThreadId} not found.");
+                }
+            }
+            else { InitializeEmpty(); }
+        }
+        catch (Exception ex) { Console.WriteLine($"ForumThreadPage: EXCEPTION: {ex.ToString()}"); InitializeEmpty(); }
+        finally { isLoading = false; }
+    }
+
+    private void InitializeEmpty()
+    {
+        currentThread = null;
+    }
+
+    private void GoToForumIndex()
+    {
+        Navigation.NavigateTo("/forums");
+    }
+
+    private void GoToCategory(int categoryId)
+    {
+        Navigation.NavigateTo($"/forums/category/{categoryId}");
+    }
+
+    private void NavigateToPostReply()
+    {
+        // TODO: For Phase 2, e.g., Navigation.NavigateTo($"/forums/createreply/{ThreadId}");
+        Console.WriteLine($"ForumThreadPage: 'Post a Reply' clicked for ThreadId {ThreadId}. (Functionality to be implemented)");
+        JSRuntime.InvokeVoidAsync("alert", "Post a reply functionality will be added in the next phase!");
+    }
+    // Need to inject IJSRuntime for the alert above
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+}

@@ -16,7 +16,9 @@ public partial class RotaryEngineDbContext : IdentityDbContext<ApplicationUser> 
         : base(options)
     {
     }
-
+    public virtual DbSet<ForumCategory> ForumCategories { get; set; } // <<< ADD THIS
+    public virtual DbSet<ForumThread> ForumThreads { get; set; }     // <<< ADD THIS
+    public virtual DbSet<ForumPost> ForumPosts { get; set; }         // <<< ADD THIS
     public virtual DbSet<CompatibilityRule> CompatibilityRules { get; set; }
 
     public virtual DbSet<Part> Parts { get; set; }
@@ -95,6 +97,53 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
                       .HasForeignKey(d => d.UserId)
                       .OnDelete(DeleteBehavior.Cascade); // Or DeleteBehavior.ClientSetNull if you prefer
             });
+            modelBuilder.Entity<ForumCategory>(entity =>
+        {
+            entity.HasKey(e => e.ForumCategoryId);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            // Optional: Add a unique constraint on ForumCategory.Name if needed
+            // entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<ForumThread>(entity =>
+        {
+            entity.HasKey(e => e.ThreadId);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ForumCategoryId).IsRequired();
+
+            // Relationship: Thread to User (one User can have many Threads)
+            entity.HasOne(d => d.User)
+                  .WithMany(p => p.ForumThreads)
+                  .HasForeignKey(d => d.UserId)
+                  .OnDelete(DeleteBehavior.Restrict); // Or Cascade, or ClientSetNull depending on desired behavior
+
+            // Relationship: Thread to ForumCategory (one Category can have many Threads)
+            entity.HasOne(d => d.ForumCategory)
+                  .WithMany(p => p.Threads)
+                  .HasForeignKey(d => d.ForumCategoryId)
+                  .OnDelete(DeleteBehavior.Cascade); // If category is deleted, delete threads
+        });
+
+        modelBuilder.Entity<ForumPost>(entity =>
+        {
+            entity.HasKey(e => e.PostId);
+            entity.Property(e => e.Content).IsRequired(); // Content can be long, default max length
+            entity.Property(e => e.UserId).IsRequired();
+            entity.Property(e => e.ThreadId).IsRequired();
+
+            // Relationship: Post to User (one User can have many Posts)
+            entity.HasOne(d => d.User)
+                  .WithMany(p => p.ForumPosts)
+                  .HasForeignKey(d => d.UserId)
+                  .OnDelete(DeleteBehavior.Restrict); // Or Cascade, or ClientSetNull
+
+            // Relationship: Post to ForumThread (one Thread can have many Posts)
+            entity.HasOne(d => d.Thread)
+                  .WithMany(p => p.Posts)
+                  .HasForeignKey(d => d.ThreadId)
+                  .OnDelete(DeleteBehavior.Cascade); // If thread is deleted, delete posts
+        });
         OnModelCreatingPartial(modelBuilder);
     }
 
