@@ -271,6 +271,9 @@ namespace rotaryproject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineMainCategoryId"));
 
+                    b.Property<string>("CssColorClass")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 

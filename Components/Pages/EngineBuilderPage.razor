@@ -73,8 +73,8 @@ else
     }
 
     @* --- HIERARCHICAL PARTS TABLE --- *@
-    <div class="table-responsive mt-3">
-        <table class="table engine-builder-table table-hover">
+    //<div class="table-responsive mt-3">
+        //<table class="table engine-builder-table table-hover">
             <thead class="table-light">
                 <tr>
                     <th style="width: 25%;">Component Group / Subcomponent</th>
@@ -86,93 +86,150 @@ else
                     <th style="width: 15%;">Actions / Buy</th>
                 </tr>
             </thead>
-            <tbody>
-                @foreach (var mainCategory in engineMainCategories.OrderBy(m => m.DisplayOrder).ThenBy(m => m.Name))
+             //<tbody>
+    @if (engineMainCategories != null)
+    {
+        @foreach (var mainCategory in engineMainCategories.OrderBy(m => m.DisplayOrder).ThenBy(m => m.Name))
+        {
+            @* --- MAIN CATEGORY ROW (e.g., BLOCK COMPONENTS) --- *@
+            <tr class="table-group-divider">
+                <td colspan="7"> @* Adjust colspan to your total number of <th> columns *@
+                    <h5 role="button" @onclick="() => ToggleMainCategory(mainCategory.EngineMainCategoryId)" style="cursor: pointer;">
+                        <span class="bi @(expandedMainCategories.Contains(mainCategory.EngineMainCategoryId) ? "bi-chevron-down" : "bi-chevron-right")"></span>
+                        @mainCategory.Name
+                    </h5>
+                </td>
+            </tr>
+
+            @* --- SUBCATEGORY ROWS (L1 - e.g., Side Housings, Rotors) --- *@
+            @if (expandedMainCategories.Contains(mainCategory.EngineMainCategoryId))
+            {
+                @foreach (var subCategoryL1 in mainCategory.SubCategories.Where(s => s.ParentEngineSubCategoryId == null).OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
                 {
-                    <tr class="table-group-divider">
-                        <td colspan="7">
-                            <h5 role="button" @onclick="() => ToggleMainCategory(mainCategory.EngineMainCategoryId)" style="cursor: pointer;">
-                                <span class="bi @(expandedMainCategories.Contains(mainCategory.EngineMainCategoryId) ? "bi-chevron-down" : "bi-chevron-right")"></span>
-                                @mainCategory.Name
-                            </h5>
+                    @* --- Row 1: For selecting a part for subCategoryL1 itself --- *@
+                    <tr class="sub-item-l1">
+                        <td class="ps-4">@subCategoryL1.Name</td>
+                        <td>@* Image for selected part in subCategoryL1 *@
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? imgPartL1) && imgPartL1 != null && !string.IsNullOrEmpty(imgPartL1.ImagePath))
+                            { <img src="@imgPartL1.ImagePath" alt="@imgPartL1.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;" onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" /> }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL1.EngineSubCategoryId))
+                            { <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image" style="max-width: 75px; max-height: 75px; object-fit: contain;" /> }
+                        </td>
+                        <td>@* Selection Name & Brand for subCategoryL1 *@
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? selectedPartL1) && selectedPartL1 != null)
+                            {
+                                <a href="/partdetail/@selectedPartL1.PartId"><strong>@selectedPartL1.Name</strong></a>
+                                @if(!string.IsNullOrWhiteSpace(selectedPartL1.Brand)){ <br /><small class="text-muted">Brand: @selectedPartL1.Brand</small> }
+                            }
+                            else { <span class="text-muted">No part selected</span> }
+                        </td>
+                        <td>@* Availability for subCategoryL1 *@
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? availPartL1) && availPartL1 != null)
+                            { <span>@(!string.IsNullOrEmpty(availPartL1.Availability) ? availPartL1.Availability : "-")</span> }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL1.EngineSubCategoryId)) { <span class="text-muted">-</span> }
+                        </td>
+                        <td>@* Vendor for subCategoryL1 *@
+                                @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? vendorPartL1) && vendorPartL1 != null && !string.IsNullOrEmpty(vendorPartL1.VendorName))
+                            {
+                                @if(!string.IsNullOrEmpty(vendorPartL1.VendorProductUrl))
+                                { <a href="@vendorPartL1.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPartL1.VendorName</a> }
+                                else { <span>@vendorPartL1.VendorName</span> }
+                            }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL1.EngineSubCategoryId)) { <span class="text-muted">-</span> }
+                        </td>
+                        <td>@* Price for subCategoryL1 *@
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? pricedPartL1) && pricedPartL1 != null && pricedPartL1.BasePrice.HasValue)
+                            { <strong>@pricedPartL1.BasePrice.Value.ToString("C")</strong> }
+                            else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL1.EngineSubCategoryId)) { <span class="text-muted">N/A</span> }
+                        </td>
+                        <td>@* Actions for subCategoryL1 *@
+                            @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? existingPartL1) && existingPartL1 != null)
+                            {
+                                <div class="d-flex flex-column">
+                                    @if (!string.IsNullOrEmpty(existingPartL1.VendorProductUrl)) { <a href="@existingPartL1.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a> }
+                                    <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(subCategoryL1.EngineSubCategoryId)">Change</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(subCategoryL1.EngineSubCategoryId)">Clear</button>
+                                </div>
+                            }
+                            else { <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(subCategoryL1.EngineSubCategoryId)">+ Choose @subCategoryL1.Name</button> }
                         </td>
                     </tr>
-                    @if (expandedMainCategories.Contains(mainCategory.EngineMainCategoryId))
+
+                    @* --- Row 2 (Conditional): Expander row for subCategoryL1's children (IF it has children) --- *@
+                    @if (subCategoryL1.ChildSubCategories != null && subCategoryL1.ChildSubCategories.Any())
                     {
-                        @foreach (var subCategory in mainCategory.SubCategories.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
+                        <tr class="sub-item-l1-expander"> @* Optional class for styling this expander row *@
+                            <td class="ps-4 pt-1 pb-1"> @* Indent to align with subCategoryL1 name *@
+                                <span role="button" @onclick="() => ToggleParentSubCategoryExpansion(subCategoryL1.EngineSubCategoryId)" style="cursor: pointer; font-weight:normal; font-style:italic;">
+                                    <span class="bi @(expandedParentSubCategories.Contains(subCategoryL1.EngineSubCategoryId) ? "bi-chevron-down" : "bi-chevron-right")"></span>
+                                    Click to expand components
+
+                                </span>
+                            </td>
+                            <td colspan="6"></td> @* Empty cells, this row is just for expanding *@
+                        </tr>
+
+                        @* If subCategoryL1 is expanded AND has children, loop through L2 children (e.g., "Dowel Pins") *@
+                        @if (expandedParentSubCategories.Contains(subCategoryL1.EngineSubCategoryId))
                         {
-                            <tr>
-                                <td class="ps-4">@subCategory.Name</td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? imgPart) && imgPart != null && !string.IsNullOrEmpty(imgPart.ImagePath))
-                                    {
-                                        <img src="@imgPart.ImagePath" alt="@imgPart.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;"
-                                             onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" />
-                                    }
-                                    else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategory.EngineSubCategoryId))
-                                    {
-                                        <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image available" style="max-width: 75px; max-height: 75px; object-fit: contain;" />
-                                    }
-                                </td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? selectedPart) && selectedPart != null)
-                                    {
-                                        <a href="/partdetail/@selectedPart.PartId"><strong>@selectedPart.Name</strong></a>
-                                        @if(!string.IsNullOrWhiteSpace(selectedPart.Brand))
+                            @foreach (var subCategoryL2 in subCategoryL1.ChildSubCategories.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
+                            {
+                                <tr class="sub-item-l2">
+                                    <td class="ps-5">@subCategoryL2.Name</td> @* Further indent L2 subcategory *@
+                                    @* Cells for Part selected FOR subCategoryL2 *@
+                                    <td> @* Image L2 *@
+                                        @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? imgPartL2) && imgPartL2 != null && !string.IsNullOrEmpty(imgPartL2.ImagePath))
+                                        { <img src="@imgPartL2.ImagePath" alt="@imgPartL2.Name" style="max-width: 75px; max-height: 75px; object-fit: contain;" onerror="this.onerror=null; this.src='https://placehold.co/75x75/e1e1e1/777?text=No+Image';" /> }
+                                        else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL2.EngineSubCategoryId))
+                                        { <img src="https://placehold.co/75x75/e1e1e1/777?text=No+Image" alt="No image" style="max-width: 75px; max-height: 75px; object-fit: contain;" /> }
+                                    </td>
+                                    <td> @* Selection Name & Brand L2 *@
+                                         @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? selectedPartL2) && selectedPartL2 != null)
+                                         {
+                                             <a href="/partdetail/@selectedPartL2.PartId"><strong>@selectedPartL2.Name</strong></a>
+                                             @if(!string.IsNullOrWhiteSpace(selectedPartL2.Brand)){ <br /><small class="text-muted">Brand: @selectedPartL2.Brand</small> }
+                                         }
+                                         else { <span class="text-muted">No part selected</span> }
+                                    </td>
+                                    <td> @* Availability L2 *@
+                                        @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? availPartL2) && availPartL2 != null)
+                                        { <span>@(!string.IsNullOrEmpty(availPartL2.Availability) ? availPartL2.Availability : "-")</span> }
+                                        else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL2.EngineSubCategoryId)) { <span class="text-muted">-</span> }
+                                    </td>
+                                    <td> @* Vendor L2 *@
+                                        @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? vendorPartL2) && vendorPartL2 != null && !string.IsNullOrEmpty(vendorPartL2.VendorName))
                                         {
-                                            <br /><small class="text-muted">Brand: @selectedPart.Brand</small>
+                                            @if(!string.IsNullOrEmpty(vendorPartL2.VendorProductUrl))
+                                            { <a href="@vendorPartL2.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPartL2.VendorName</a> }
+                                            else { <span>@vendorPartL2.VendorName</span> }
                                         }
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">No part selected</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? availPart) && availPart != null && !string.IsNullOrEmpty(availPart.Availability))
-                                    { <span>@availPart.Availability</span> }
-                                    else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategory.EngineSubCategoryId))
-                                    { <span class="text-muted">-</span> }
-                                </td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? vendorPart) && vendorPart != null && !string.IsNullOrEmpty(vendorPart.VendorName))
-                                    {
-                                        @if(!string.IsNullOrEmpty(vendorPart.VendorProductUrl))
-                                        { <a href="@vendorPart.VendorProductUrl" target="_blank" rel="noopener noreferrer">@vendorPart.VendorName</a> }
-                                        else { <span>@vendorPart.VendorName</span> }
-                                    }
-                                    else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategory.EngineSubCategoryId))
-                                    { <span class="text-muted">-</span> }
-                                </td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? pricedPart) && pricedPart != null && pricedPart.BasePrice.HasValue)
-                                    { <strong>@pricedPart.BasePrice.Value.ToString("C")</strong> }
-                                    else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategory.EngineSubCategoryId))
-                                    { <span class="text-muted">N/A</span> }
-                                    else { <span class="text-muted">-</span> }
-                                </td>
-                                <td>
-                                    @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategory.EngineSubCategoryId, out Part? existingPart) && existingPart != null)
-                                    {
-                                        <div class="d-flex flex-column">
-                                            @if (!string.IsNullOrEmpty(existingPart.VendorProductUrl))
-                                            { <a href="@existingPart.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a> }
-                                            <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(subCategory.EngineSubCategoryId)">Change</button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(subCategory.EngineSubCategoryId)">Clear</button>
-                                        </div>
-                                    }
-                                    else
-                                    {
-                                        <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(subCategory.EngineSubCategoryId)">+ Choose A @subCategory.Name</button>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    }
-                }
-            </tbody>
-        </table>
-    </div>
+                                        else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL2.EngineSubCategoryId)) { <span class="text-muted">-</span> }
+                                    </td>
+                                    <td> @* Price L2 *@
+                                        @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? pricedPartL2) && pricedPartL2 != null && pricedPartL2.BasePrice.HasValue)
+                                        { <strong>@pricedPartL2.BasePrice.Value.ToString("C")</strong> }
+                                        else if (BuildStateService.CurrentBuild.SelectedParts.ContainsKey(subCategoryL2.EngineSubCategoryId)) { <span class="text-muted">N/A</span> }
+                                    </td>
+                                    <td>@* Actions L2 *@
+                                         @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL2.EngineSubCategoryId, out Part? existingPartL2) && existingPartL2 != null)
+                                        {
+                                            <div class="d-flex flex-column">
+                                                @if (!string.IsNullOrEmpty(existingPartL2.VendorProductUrl)) { <a href="@existingPartL2.VendorProductUrl" target="_blank" rel="noopener noreferrer" class="btn btn-success btn-sm mb-1">Buy</a> }
+                                                <button class="btn btn-sm btn-outline-secondary mb-1" @onclick="() => SelectOrChangePart(subCategoryL2.EngineSubCategoryId)">Change</button>
+                                                <button class="btn btn-sm btn-outline-danger" @onclick="() => ClearPartSelection(subCategoryL2.EngineSubCategoryId)">Clear</button>
+                                            </div>
+                                        } else { <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(subCategoryL2.EngineSubCategoryId)">+ Choose @subCategoryL2.Name</button> }
+                                    </td>
+                                </tr>
+                            }
+                        } @* End of L2 subcategory loop *@
+                    } @* End of L1 subcategory loop *@
+                } @* End of @if mainCategory is expanded *@
+            } @* End of mainCategory loop *@
+        } @* End of safety null check for engineMainCategories *@
+    //</tbody>
+    //</table>
+   // </div>
 }
 
 <style>
@@ -186,7 +243,7 @@ else
 </style>
 
 @code {
-    [SupplyParameterFromQuery(Name = "build")]
+    //[SupplyParameterFromQuery(Name = "build")]
     public string? IncomingBuildConfigurationString { get; set; }
 
     [SupplyParameterFromQuery]
@@ -201,7 +258,8 @@ private HashSet<int> expandedSubCategories = new HashSet<int>();
     private bool _justProcessedQueryAndNavigated = false;
     private string? shareableLink;
     private bool linkCopied = false;
-
+private HashSet<int> expandedMainCategories = new HashSet<int>();
+private HashSet<int> expandedParentSubCategories = new HashSet<int>(); // For L1 subcategories that are parents
     // For Save Build UI
     private string? newBuildName;
     private string? saveBuildMessage;
@@ -209,41 +267,62 @@ private HashSet<int> expandedSubCategories = new HashSet<int>();
     private string ReturnUrlForLogin => Navigation.ToAbsoluteUri(Navigation.Uri).ToString();
 
     // For expanding/collapsing main categories
-    private HashSet<int> expandedMainCategories = new HashSet<int>();
 
     protected override async Task OnInitializedAsync()
+{
+    Console.WriteLine("EngineBuilderPage: OnInitializedAsync - ENTERED.");
+    isLoadingCategories = true;
+    try
     {
-        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - ENTERED.");
-        isLoadingCategories = true;
-        try
+        if (DbContext.EngineMainCategories != null)
         {
-            if (DbContext.EngineMainCategories != null)
-    {
-        engineMainCategories = await DbContext.EngineMainCategories
-                                    .Include(m => m.SubCategories) // Load top-level subcategories
-                                        // .ThenInclude(s => s.ChildSubCategories) // Uncomment to load one more level deep
-                                    .OrderBy(m => m.DisplayOrder).ThenBy(m => m.Name)
-                                    .ToListAsync();
-                Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - Loaded {engineMainCategories?.Count ?? 0} main categories.");
-            }
-            else
-            {
-                engineMainCategories = new List<EngineMainCategory>();
-                Console.WriteLine("EngineBuilderPage: OnInitializedAsync - DbContext.EngineMainCategories DbSet is null.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - EXCEPTION while loading main categories: {ex.ToString()}");
-            engineMainCategories = new List<EngineMainCategory>();
-        }
-        finally
-        {
-            isLoadingCategories = false;
-        }
-        Console.WriteLine("EngineBuilderPage: OnInitializedAsync - EXITED.");
-    }
+            engineMainCategories = await DbContext.EngineMainCategories
+                                        .Include(m => m.SubCategories)           // Load first-level subcategories
+                                            .ThenInclude(s => s.ChildSubCategories) // CRUCIAL: Load children of those subcategories
+                                        .OrderBy(m => m.DisplayOrder)
+                                        .ThenBy(m => m.Name)
+                                        .ToListAsync();
+            
+            Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - Loaded {engineMainCategories?.Count ?? 0} main categories.");
 
+            // --- Add this DEBUG LOG ---
+            if (engineMainCategories != null)
+            {
+                foreach (var mainCat in engineMainCategories)
+                {
+                    Console.WriteLine($"  MainCat: {mainCat.Name}");
+                    foreach (var subCatL1 in mainCat.SubCategories.Where(s => s.ParentEngineSubCategoryId == null))
+                    {
+                        Console.WriteLine($"    L1 SubCat: {subCatL1.Name} (ID: {subCatL1.EngineSubCategoryId}), Has L2 Children: {subCatL1.ChildSubCategories.Any()}");
+                        if (subCatL1.ChildSubCategories.Any())
+                        {
+                            foreach (var subCatL2 in subCatL1.ChildSubCategories)
+                            {
+                                Console.WriteLine($"      L2 SubCat: {subCatL2.Name} (ID: {subCatL2.EngineSubCategoryId})");
+                            }
+                        }
+                    }
+                }
+            }
+            // --- END DEBUG LOG ---
+        }
+        else
+        {
+            engineMainCategories = new List<EngineMainCategory>();
+            Console.WriteLine("EngineBuilderPage: OnInitializedAsync - DbContext.EngineMainCategories DbSet is null.");
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"EngineBuilderPage: OnInitializedAsync - EXCEPTION while loading categories: {ex.ToString()}");
+        engineMainCategories = new List<EngineMainCategory>();
+    }
+    finally
+    {
+        isLoadingCategories = false;
+    }
+    Console.WriteLine("EngineBuilderPage: OnInitializedAsync - EXITED.");
+}
     protected override async Task OnParametersSetAsync()
     {
         Console.WriteLine($"EngineBuilderPage ({BuildStateService.CurrentBuild.GetHashCode()}): OnParametersSetAsync - ENTERED. BuildString: '{IncomingBuildConfigurationString}', PassedSubCatId: {PassedSubCategoryId}, PassedSelPartId: {PassedSelectedPartId}, JustProcessedFlag: {_justProcessedQueryAndNavigated}");
@@ -392,35 +471,45 @@ private HashSet<int> expandedSubCategories = new HashSet<int>();
     }
 
     private void ToggleMainCategory(int mainCategoryId)
-    {
-        if (expandedMainCategories.Contains(mainCategoryId))
-        {
-            expandedMainCategories.Remove(mainCategoryId);
-        }
-        else
-        {
-            expandedMainCategories.Add(mainCategoryId);
-        }
-    }
+{
+    if (expandedMainCategories.Contains(mainCategoryId)) { expandedMainCategories.Remove(mainCategoryId); }
+    else { expandedMainCategories.Add(mainCategoryId); }
+}
     // In @code block of EngineBuilderPage.razor
-private void ToggleSubCategory(int subCategoryId)
+// private HashSet<int> expandedMainCategories = new HashSet<int>(); // Already have this
+
+private void ToggleSubCategoryExpansion(int subCategoryId)
 {
     if (expandedSubCategories.Contains(subCategoryId))
     {
         expandedSubCategories.Remove(subCategoryId);
-        Console.WriteLine($"EngineBuilderPage: SubCategory {subCategoryId} collapsed.");
     }
     else
     {
         expandedSubCategories.Add(subCategoryId);
-        Console.WriteLine($"EngineBuilderPage: SubCategory {subCategoryId} expanded.");
     }
-    // StateHasChanged(); // May not be needed if the UI updates correctly,
-                       // but add it if expansion doesn't visually update.
+    // StateHasChanged(); // Blazor usually detects changes from @onclick
 }
+
+// You already have ToggleMainCategory
+// private void ToggleMainCategory(int mainCategoryId) { ... }
 // In @code block of EngineBuilderPage.razor
 private bool IsSubCategoryExpanded(int subCategoryId)
 {
     return expandedSubCategories.Contains(subCategoryId);
+}
+
+private void ToggleParentSubCategoryExpansion(int subCategoryId)
+{
+    if (expandedParentSubCategories.Contains(subCategoryId)) { expandedParentSubCategories.Remove(subCategoryId); }
+    else { expandedParentSubCategories.Add(subCategoryId); }
+    StateHasChanged(); // Good to have to ensure UI updates for this nested level
+}
+
+// Helper to check expansion state (optional, can use .Contains() directly in HTML)
+private bool IsParentSubCategoryExpanded(int subCategoryId)
+{
+    return expandedParentSubCategories.Contains(subCategoryId);
+}
 }
 }

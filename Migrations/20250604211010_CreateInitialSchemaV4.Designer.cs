@@ -12,8 +12,8 @@ using rotaryproject.Data;
 namespace rotaryproject.Migrations
 {
     [DbContext(typeof(RotaryEngineDbContext))]
-    [Migration("20250604202335_AddSelfReferencingToSubCategories")]
-    partial class AddSelfReferencingToSubCategories
+    [Migration("20250604211010_CreateInitialSchemaV4")]
+    partial class CreateInitialSchemaV4
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

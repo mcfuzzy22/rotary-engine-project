@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace rotaryproject.Migrations
 {
     /// <inheritdoc />
-    public partial class CreateInitialSchemaV2 : Migration
+    public partial class CreateInitialSchemaV4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -230,7 +230,8 @@ namespace rotaryproject.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    EngineMainCategoryId = table.Column<int>(type: "int", nullable: false)
+                    EngineMainCategoryId = table.Column<int>(type: "int", nullable: false),
+                    ParentEngineSubCategoryId = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -241,6 +242,12 @@ namespace rotaryproject.Migrations
                         principalTable: "EngineMainCategories",
                         principalColumn: "EngineMainCategoryId",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EngineSubCategories_EngineSubCategories_ParentEngineSubCategoryId",
+                        column: x => x.ParentEngineSubCategoryId,
+                        principalTable: "EngineSubCategories",
+                        principalColumn: "EngineSubCategoryId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -454,6 +461,11 @@ namespace rotaryproject.Migrations
                 name: "IX_EngineSubCategories_EngineMainCategoryId",
                 table: "EngineSubCategories",
                 column: "EngineMainCategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EngineSubCategories_ParentEngineSubCategoryId",
+                table: "EngineSubCategories",
+                column: "ParentEngineSubCategoryId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ForumPosts_ThreadId",

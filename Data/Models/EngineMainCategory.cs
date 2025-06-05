@@ -16,6 +16,7 @@ namespace rotaryproject.Data.Models // Verify your project's namespace
         public int DisplayOrder { get; set; } = 0;
 
         // Navigation property to its subcategories
+        public string? CssColorClass { get; set; }
         public virtual ICollection<EngineSubCategory> SubCategories { get; set; } = new List<EngineSubCategory>();
     }
 }

@@ -12,8 +12,8 @@ using rotaryproject.Data;
 namespace rotaryproject.Migrations
 {
     [DbContext(typeof(RotaryEngineDbContext))]
-    [Migration("20250604193903_CreateInitialSchemaV2")]
-    partial class CreateInitialSchemaV2
+    [Migration("20250605202921_AddCssColorClassToEngineMainCategories")]
+    partial class AddCssColorClassToEngineMainCategories
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -274,6 +274,9 @@ namespace rotaryproject.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EngineMainCategoryId"));
 
+                    b.Property<string>("CssColorClass")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
@@ -309,9 +312,14 @@ namespace rotaryproject.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("ParentEngineSubCategoryId")
+                        .HasColumnType("int");
+
                     b.HasKey("EngineSubCategoryId");
 
                     b.HasIndex("EngineMainCategoryId");
+
+                    b.HasIndex("ParentEngineSubCategoryId");
 
                     b.ToTable("EngineSubCategories");
                 });
@@ -678,7 +686,14 @@ namespace rotaryproject.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("rotaryproject.Data.Models.EngineSubCategory", "ParentSubCategory")
+                        .WithMany("ChildSubCategories")
+                        .HasForeignKey("ParentEngineSubCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("MainCategory");
+
+                    b.Navigation("ParentSubCategory");
                 });
 
             modelBuilder.Entity("rotaryproject.Data.Models.ForumPost", b =>
@@ -769,6 +784,8 @@ namespace rotaryproject.Migrations
 
             modelBuilder.Entity("rotaryproject.Data.Models.EngineSubCategory", b =>
                 {
+                    b.Navigation("ChildSubCategories");
+
                     b.Navigation("Parts");
                 });
 
