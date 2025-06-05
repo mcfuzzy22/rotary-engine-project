@@ -18,7 +18,6 @@
 <div class="compatibility-summary my-3 p-3 bg-light border rounded" style="min-height: 50px;">
     <p class="mb-0"><em>Compatibility and overall stats will appear here. Current Total: @BuildStateService.CurrentBuild.TotalPrice.ToString("C")</em></p>
 </div>
-
 @if (isLoadingCategories)
 {
     <p><em>Loading engine component structure...</em></p>
@@ -96,7 +95,7 @@ else
                 <td colspan="7"> @* Adjust colspan to your total number of <th> columns *@
                     <h5 role="button" @onclick="() => ToggleMainCategory(mainCategory.EngineMainCategoryId)" style="cursor: pointer;">
                         <span class="bi @(expandedMainCategories.Contains(mainCategory.EngineMainCategoryId) ? "bi-chevron-down" : "bi-chevron-right")"></span>
-                        @mainCategory.Name
+                        @mainCategory.Name : Click To Expand
                     </h5>
                 </td>
             </tr>
@@ -107,7 +106,7 @@ else
                 @foreach (var subCategoryL1 in mainCategory.SubCategories.Where(s => s.ParentEngineSubCategoryId == null).OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
                 {
                     @* --- Row 1: For selecting a part for subCategoryL1 itself --- *@
-                    <tr class="sub-item-l1 @subCategoryL1.CssColorClass">
+                    <tr class="sub-item-l1 @subCategoryL1.CssColorClass">  
                         <td class="ps-4">@subCategoryL1.Name</td>
                         <td>@* Image for selected part in subCategoryL1 *@
                             @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? imgPartL1) && imgPartL1 != null && !string.IsNullOrEmpty(imgPartL1.ImagePath))
@@ -153,7 +152,7 @@ else
                             }
                             else { <button class="btn btn-sm btn-primary" @onclick="() => SelectOrChangePart(subCategoryL1.EngineSubCategoryId)">+ Choose @subCategoryL1.Name</button> }
                         </td>
-                    </tr>
+                   </tr>
 
                     @* --- Row 2 (Conditional): Expander row for subCategoryL1's children (IF it has children) --- *@
                     @if (subCategoryL1.ChildSubCategories != null && subCategoryL1.ChildSubCategories.Any())

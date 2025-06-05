@@ -64,11 +64,149 @@ h1:focus {
 }
 
 .style-dowel-pins { /* For the "Dowel Pins" row */
-    background-color: #fff2e6 !important; /* Light orange background */
+    background-color: #fdeeee !important; /* Light orange background */
+    border-left: 4px solid #fd7e14 !important; /* Orange left border */
+}
+.style-dowel-pin-seals { /* For the "Dowel Pins" row */
+    background-color: #fdeeee !important; /* Light orange background */
     border-left: 4px solid #fd7e14 !important; /* Orange left border */
 }
 
 .style-apex-seals { /* For the "Apex Seals" row */
-    background-color: #e6f7ff !important; /* Light blue background */
-    border-left: 4px solid #007bff !important; /* Blue left border */
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+.style-rotor-housings {
+    background-color: #e2f0d9 !important; /* Light green */
+    border-left: 4px solid #548235 !important; /* Green left border */
+}
+
+.style-rotors {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-eccentric-shaft {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-stationary-gears {
+    background-color: #e4dfec !important; /* Light purple */
+    border-left: 4px solid #7030a0 !important; /* Purple left border */
+}
+
+.style-tension-bolts {
+    background-color: #ddebf7 !important; /* Light sky blue */
+    border-left: 4px solid #2f75b5 !important; /* Sky blue left border */
+}
+
+.style-inner-water-jacket-oring {
+    background-color: #e2f0d9 !important; /* Light green */
+    border-left: 4px solid #548235 !important; /* Green left border */
+}
+
+.style-outer-water-jacket-oring {
+    background-color: #e2f0d9 !important; /* Light green */
+    border-left: 4px solid #548235 !important; /* Green left border */
+}
+
+.style-rotor-bearing {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-apex-seal-big-springs {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-apex-seal-little-springs {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-side-seals {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-side-seal-springs {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-corner-seals {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-corner-seal-springs {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-oil-o-rings-rotor {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-oil-o-ring-springs-rotor {
+    background-color: #fff2cc !important; /* Light yellow */
+    border-left: 4px solid #ffc000 !important; /* Yellow left border */
+}
+
+.style-torrington-bearing {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-endplay-spacer {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-engine-front-cover-bearing {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-counter-weight-e-shaft {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-oil-pump-e-shaft-driven {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-oil-pump-chain-drive {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-eccentric-shaft-key {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-eccentric-pulley-hub {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-e-shaft-thermostat {
+    background-color: #f2f2f2 !important; /* Light grey */
+    border-left: 4px solid #7f7f7f !important; /* Grey left border */
+}
+
+.style-stationary-gear-bearings {
+    background-color: #e4dfec !important; /* Light purple */
+    border-left: 4px solid #7030a0 !important; /* Purple left border */
+}
+
+.style-tension-bolt-seals {
+    background-color: #ddebf7 !important; /* Light sky blue */
+    border-left: 4px solid #2f75b5 !important; /* Sky blue left border */
 }
