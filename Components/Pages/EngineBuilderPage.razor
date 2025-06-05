@@ -107,7 +107,7 @@ else
                 @foreach (var subCategoryL1 in mainCategory.SubCategories.Where(s => s.ParentEngineSubCategoryId == null).OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
                 {
                     @* --- Row 1: For selecting a part for subCategoryL1 itself --- *@
-                    <tr class="sub-item-l1">
+                    <tr class="sub-item-l1 @subCategoryL1.CssColorClass">
                         <td class="ps-4">@subCategoryL1.Name</td>
                         <td>@* Image for selected part in subCategoryL1 *@
                             @if (BuildStateService.CurrentBuild.SelectedParts.TryGetValue(subCategoryL1.EngineSubCategoryId, out Part? imgPartL1) && imgPartL1 != null && !string.IsNullOrEmpty(imgPartL1.ImagePath))
@@ -158,7 +158,7 @@ else
                     @* --- Row 2 (Conditional): Expander row for subCategoryL1's children (IF it has children) --- *@
                     @if (subCategoryL1.ChildSubCategories != null && subCategoryL1.ChildSubCategories.Any())
                     {
-                        <tr class="sub-item-l1-expander"> @* Optional class for styling this expander row *@
+                        <tr class="sub-item-l1-expander @subCategoryL1.CssColorClass"> @* Optional class for styling this expander row *@
                             <td class="ps-4 pt-1 pb-1"> @* Indent to align with subCategoryL1 name *@
                                 <span role="button" @onclick="() => ToggleParentSubCategoryExpansion(subCategoryL1.EngineSubCategoryId)" style="cursor: pointer; font-weight:normal; font-style:italic;">
                                     <span class="bi @(expandedParentSubCategories.Contains(subCategoryL1.EngineSubCategoryId) ? "bi-chevron-down" : "bi-chevron-right")"></span>
@@ -174,7 +174,7 @@ else
                         {
                             @foreach (var subCategoryL2 in subCategoryL1.ChildSubCategories.OrderBy(s => s.DisplayOrder).ThenBy(s => s.Name))
                             {
-                                <tr class="sub-item-l2">
+                                <tr class="sub-item-l2 @subCategoryL2.CssColorClass">
                                     <td class="ps-5">@subCategoryL2.Name</td> @* Further indent L2 subcategory *@
                                     @* Cells for Part selected FOR subCategoryL2 *@
                                     <td> @* Image L2 *@

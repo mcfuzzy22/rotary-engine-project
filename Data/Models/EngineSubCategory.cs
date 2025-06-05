@@ -30,7 +30,7 @@ namespace rotaryproject.Data.Models
 
         public virtual ICollection<EngineSubCategory> ChildSubCategories { get; set; } = new List<EngineSubCategory>();
         // --- End Self-Referencing Hierarchy ---
-
+        public string? CssColorClass { get; set; }
         // Parts are typically associated with the "leaf" subcategories
         public virtual ICollection<Part> Parts { get; set; } = new List<Part>();
     }

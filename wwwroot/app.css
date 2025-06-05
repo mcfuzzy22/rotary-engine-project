@@ -58,9 +58,17 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
-.sub-item-l1 td:first-child {
-    /* padding-left: 2.5rem; /* Adjust as needed if ps-4 isn't enough or if you remove ps-4 */
+.style-side-housings { /* For the "Side Housings" row itself */
+    background-color: #fdeeee !important; /* Light red background */
+    border-left: 4px solid #dc3545 !important; /* Red left border */
 }
-.sub-item-l2 td:first-child {
-    padding-left: 4rem !important; /* Ensure more indentation for L2 */
+
+.style-dowel-pins { /* For the "Dowel Pins" row */
+    background-color: #fff2e6 !important; /* Light orange background */
+    border-left: 4px solid #fd7e14 !important; /* Orange left border */
+}
+
+.style-apex-seals { /* For the "Apex Seals" row */
+    background-color: #e6f7ff !important; /* Light blue background */
+    border-left: 4px solid #007bff !important; /* Blue left border */
 }
