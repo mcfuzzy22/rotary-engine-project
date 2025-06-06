@@ -106,7 +106,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
             modelBuilder.Entity<EngineMainCategory>(entity =>
         {
             entity.HasKey(e => e.EngineMainCategoryId);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(100);
             entity.HasIndex(e => e.Name).IsUnique(); // Main category names should be unique
         });
 
@@ -114,7 +114,7 @@ protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         modelBuilder.Entity<EngineSubCategory>(entity =>
         {
             entity.HasKey(e => e.EngineSubCategoryId);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Name).HasMaxLength(100);
 
             // Relationship: SubCategory to MainCategory
             entity.HasOne(d => d.MainCategory)

@@ -387,4 +387,4 @@ C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\refint\rota
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.pdb
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\rotaryproject.genruntimeconfig.cache
 C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\ref\rotaryproject.dll
-C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\ggmeh1l88f-3cvms4mbbc.gz
+C:\Users\mcfuz\rotaryprojectmicrosoft\rotaryproject\obj\Debug\net9.0\compressed\ggmeh1l88f-6hve5wh4l7.gz

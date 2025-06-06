@@ -12,7 +12,7 @@ namespace rotaryproject.Data.Models
 
         [Required]
         [StringLength(100)]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
 
         public int DisplayOrder { get; set; } = 0;
 

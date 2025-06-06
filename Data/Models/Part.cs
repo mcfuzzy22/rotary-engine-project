@@ -8,14 +8,14 @@ namespace rotaryproject.Data.Models
         [Key]
         //[Column("PartID")]
         public int PartId { get; set; } // Ensure casing matches your DB/usage
-
+        public int Id { get; set; }
         //[Required]
         //public int CategoryId { get; set; } // Ensure casing matches your DB/usage
         [Required]
         public int EngineSubCategoryId { get; set; }
         [Required]
         [StringLength(150)]
-        public string Name { get; set; } = string.Empty;
+        public string? Name { get; set; } = string.Empty;
 
         [StringLength(50)]
         public string? Sku { get; set; } // Ensure casing matches your DB/usage

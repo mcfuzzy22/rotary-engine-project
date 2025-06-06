@@ -11,7 +11,7 @@ namespace rotaryproject.Data.Models // Verify your project's namespace
 
         [Required]
         [StringLength(100)]
-        public string Name { get; set; } = string.Empty; // e.g., "BLOCK COMPONENTS"
+        public string? Name { get; set; } = string.Empty; // e.g., "BLOCK COMPONENTS"
 
         public int DisplayOrder { get; set; } = 0;
 

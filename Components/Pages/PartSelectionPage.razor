@@ -41,7 +41,6 @@ else if (currentSubCategory != null) // CHANGED to currentSubCategory
                             <h5 class="mb-1">@part.Name</h5>
                             <p class="mb-1">@(part.Description ?? "No description available.")</p>
                             <small class="text-muted">SKU: @(part.Sku ?? "N/A")</small>
-                            <small class="text-muted ms-2">Price: @(part.BasePrice?.ToString("C") ?? "N/A")</small>
                         </div>
                         <div class="col-md-3 text-end">
                             <button class="btn btn-success btn-sm" @onclick="() => SelectThisPart(part.PartId)">
@@ -92,38 +91,38 @@ else
     // Add List<FilterOption> for other properties you want to filter by (e.g., SizeMm, EngineCompatibility)
 
     protected override async Task OnParametersSetAsync()
+{
+    Console.WriteLine($"PartSelectionPage: OnParametersSetAsync - Loading parts for SubCategoryId {SubCategoryId}");
+    isLoading = true;
+    try
     {
-        Console.WriteLine($"PartSelectionPage: OnParametersSetAsync - Loading parts for SubCategoryId {SubCategoryId}");
-        isLoading = true;
-        try
+        if (DbContext.EngineSubCategories != null && DbContext.Parts != null && SubCategoryId > 0)
         {
-            if (DbContext.EngineSubCategories != null && DbContext.Parts != null && SubCategoryId > 0)
-            {
-                currentSubCategory = await DbContext.EngineSubCategories
-                                            .Include(sc => sc.MainCategory) // Include MainCategory for display
-                                            .FirstOrDefaultAsync(sc => sc.EngineSubCategoryId == SubCategoryId);
+            // CORRECTED QUERY 1: Use 'Id' to match the EngineSubCategory model
+            currentSubCategory = await DbContext.EngineSubCategories
+                .Include(sc => sc.MainCategory)
+                .FirstOrDefaultAsync(sc => sc.EngineSubCategoryId == SubCategoryId);
 
-                if (currentSubCategory != null)
-                {
-                    // Load parts belonging to this subcategory
-                    // Ensure p.EngineSubCategoryId casing matches your Part.cs model
-                    partsForSubCategory = await DbContext.Parts
-                                                .Where(p => p.EngineSubCategoryId == SubCategoryId)
-                                                .OrderBy(p => p.Name)
-                                                .ToListAsync();
-                    Console.WriteLine($"PartSelectionPage: Found {partsForSubCategory?.Count ?? 0} parts for subcategory '{currentSubCategory.Name}'.");
-                }
-                else
-                {
-                    Console.WriteLine($"PartSelectionPage: SubCategory with ID {SubCategoryId} not found.");
-                    partsForSubCategory = new List<Part>(); 
-                }
+            if (currentSubCategory != null)
+            {
+                // CORRECTED QUERY 2: Use 'SubCategoryId' to match the Part model
+                partsForSubCategory = await DbContext.Parts
+                    .Where(p => p.EngineSubCategoryId == SubCategoryId)
+                    .OrderBy(p => p.Name)
+                    .ToListAsync();
+                Console.WriteLine($"PartSelectionPage: Found {partsForSubCategory?.Count ?? 0} parts for subcategory '{currentSubCategory.Name}'.");
             }
-            else { /* ... handle invalid SubCategoryId or DbContext ... */ InitializeEmpty(); }
+            else
+            {
+                Console.WriteLine($"PartSelectionPage: SubCategory with ID {SubCategoryId} not found.");
+                partsForSubCategory = new List<Part>();
+            }
         }
-        catch (Exception ex) { Console.WriteLine($"PartSelectionPage: Error loading: {ex.ToString()}"); InitializeEmpty(); }
-        finally { isLoading = false; }
+        else { InitializeEmpty(); }
     }
+    catch (Exception ex) { Console.WriteLine($"PartSelectionPage: Error loading: {ex.ToString()}"); InitializeEmpty(); }
+    finally { isLoading = false; }
+}
 
     private void InitializeEmpty()
     {
